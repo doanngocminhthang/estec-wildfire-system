@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Analytics &amp; Historical Reports - IGNIS MONITOR</title>
+    <title>Thống kê & Báo cáo &amp; Báo cáo Lịch sử - HỆ THỐNG GIÁM SÁT CHÁY RỪNG</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
@@ -113,7 +113,7 @@
             @apply bg-surface-container-highest/50 border border-white/10 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary transition-all text-on-surface;
         }
 
-        /* Custom scrollbar for dark theme */
+        /* Tùy chỉnh scrollbar for dark theme */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -158,16 +158,16 @@
                         style="font-variation-settings: 'FILL' 1;">admin_panel_settings</span>
                 </div>
                 <div>
-                    <h1 class="font-label-caps text-label-caps text-primary uppercase tracking-widest">COMMAND CENTER
+                    <h1 class="font-label-caps text-label-caps text-primary uppercase tracking-widest">TRUNG TÂM ĐIỀU HÀNH
                     </h1>
-                    <p class="font-label-caps text-label-caps text-on-surface-variant mt-1">SECTOR 7-G ACTIVE</p>
+                    <p class="font-label-caps text-label-caps text-on-surface-variant mt-1">KHU VỰC 7-G (ĐANG HOẠT ĐỘNG)</p>
                 </div>
             </div>
             <button
                 class="w-full bg-error-container text-on-error-container hover:bg-error-container/80 font-label-caps text-label-caps py-3 rounded-lg flex items-center justify-center gap-2 active:scale-95 duration-100 transition-all shadow-[0_0_15px_rgba(147,0,10,0.3)] border border-error-container/50">
                 <span class="material-symbols-outlined text-[18px]"
                     style="font-variation-settings: 'FILL' 1;">warning</span>
-                ISSUE EMERGENCY ALERT
+                PHÁT TÍN HIỆU KHẨN CẤP
             </button>
         </div>
         <!-- Main Navigation -->
@@ -175,24 +175,24 @@
             <a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 transition-all duration-200 ease-in-out font-label-caps text-label-caps group"
                 href="#">
                 <span class="material-symbols-outlined group-hover:text-on-surface transition-colors">dashboard</span>
-                Overview
+                Tổng quan
             </a>
             <a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 transition-all duration-200 ease-in-out font-label-caps text-label-caps group"
                 href="#">
                 <span class="material-symbols-outlined group-hover:text-on-surface transition-colors">map</span>
-                Live Map
+                Bản đồ trực tuyến
             </a>
             <a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 transition-all duration-200 ease-in-out font-label-caps text-label-caps group"
                 href="#">
                 <span
                     class="material-symbols-outlined group-hover:text-on-surface transition-colors">local_fire_department</span>
-                Incidents
+                Quản lý Sự cố
             </a>
             <!-- Active Tab -->
             <a class="flex items-center gap-4 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-xl font-bold font-label-caps text-label-caps transition-all duration-200 ease-in-out shadow-[0_0_10px_rgba(251,140,0,0.2)]"
                 href="#">
                 <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">query_stats</span>
-                Analytics
+                Thống kê & Báo cáo
             </a>
         </nav>
         <!-- Footer Navigation -->
@@ -200,12 +200,12 @@
             <a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 transition-all duration-200 ease-in-out font-label-caps text-label-caps group"
                 href="#">
                 <span class="material-symbols-outlined group-hover:text-on-surface transition-colors">settings</span>
-                System Settings
+                Cài đặt hệ thống
             </a>
             <a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 transition-all duration-200 ease-in-out font-label-caps text-label-caps group"
                 href="#">
                 <span class="material-symbols-outlined group-hover:text-on-surface transition-colors">help</span>
-                Support
+                Hỗ trợ
             </a>
         </div>
     </aside>
@@ -216,7 +216,7 @@
             class="flex justify-between items-center w-full px-margin h-16 sticky top-0 z-50 bg-surface-container/80 backdrop-blur-xl border-b border-white/10 shadow-md">
             <div
                 class="font-heading-lg text-heading-lg font-bold tracking-tighter text-primary flex items-center gap-2">
-                IGNIS MONITOR
+                HỆ THỐNG GIÁM SÁT CHÁY RỪNG
             </div>
             <div class="flex items-center gap-6">
                 <!-- Search -->
@@ -225,7 +225,7 @@
                         class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
                     <input
                         class="bg-surface-container-highest border border-white/10 rounded-full py-1.5 pl-10 pr-4 text-[14px] w-64 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
-                        placeholder="Query telemetry data..." type="text" />
+                        placeholder="Tra cứu dữ liệu viễn trắc..." type="text" />
                 </div>
                 <!-- Actions -->
                 <div class="flex items-center gap-2">
@@ -252,7 +252,7 @@
             <div
                 class="glass-panel p-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 z-10">
                 <div>
-                    <h2 class="font-heading-lg text-heading-lg text-on-surface mb-1">Historical Reports</h2>
+                    <h2 class="font-heading-lg text-heading-lg text-on-surface mb-1">Báo cáo Lịch sử</h2>
                     <p class="font-label-caps text-label-caps text-on-surface-variant">DATA SYNTHESIS &amp; TREND
                         ANALYSIS</p>
                 </div>
@@ -264,31 +264,31 @@
                             class="px-3 py-1.5 rounded text-[13px] font-medium text-on-surface bg-white/5 border border-white/10">Last
                             30 Days</button>
                         <button
-                            class="px-3 py-1.5 rounded text-[13px] font-medium text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors">YTD</button>
+                            class="px-3 py-1.5 rounded text-[13px] font-medium text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors">Từ đầu năm</button>
                         <button
-                            class="px-3 py-1.5 rounded text-[13px] font-medium text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors">Custom</button>
+                            class="px-3 py-1.5 rounded text-[13px] font-medium text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors">Tùy chỉnh</button>
                         <span
                             class="material-symbols-outlined text-on-surface-variant mx-2 text-[18px]">calendar_month</span>
                     </div>
                     <!-- Region Filter -->
                     <select class="glass-input py-2 pl-3 pr-8 text-[13px] appearance-none cursor-pointer">
-                        <option>All Regions</option>
-                        <option>Northern Sector</option>
-                        <option>Western Ridge</option>
-                        <option>Eastern Valley</option>
+                        <option>Tất cả Khu vực</option>
+                        <option>Khu vực Phía Bắc</option>
+                        <option>Sườn Tây</option>
+                        <option>Thung lũng Phía Đông</option>
                     </select>
                     <!-- Cause Filter -->
                     <select class="glass-input py-2 pl-3 pr-8 text-[13px] appearance-none cursor-pointer">
-                        <option>All Causes</option>
-                        <option>Lightning Strike</option>
-                        <option>Human Activity</option>
-                        <option>Equipment Failure</option>
+                        <option>Tất cả Nguyên nhân</option>
+                        <option>Sét đánh</option>
+                        <option>Hoạt động con người</option>
+                        <option>Lỗi thiết bị</option>
                     </select>
                     <!-- Export Action -->
                     <button
                         class="ml-auto lg:ml-2 bg-surface-bright hover:bg-surface-bright/80 text-on-surface border border-white/10 px-4 py-2 rounded-lg font-label-caps text-label-caps flex items-center gap-2 transition-colors active:scale-95">
                         <span class="material-symbols-outlined text-[16px]">download</span>
-                        EXPORT CSV
+                        XUẤT FILE CSV
                     </button>
                 </div>
             </div>
@@ -297,45 +297,45 @@
                 <!-- Metric 1 -->
                 <div class="glass-panel p-5 border-l-4 border-l-primary">
                     <div class="flex justify-between items-start mb-2">
-                        <span class="font-label-caps text-label-caps text-on-surface-variant">TOTAL INCIDENTS</span>
+                        <span class="font-label-caps text-label-caps text-on-surface-variant">TỔNG INCIDENTS</span>
                         <span class="material-symbols-outlined text-primary text-[20px]">local_fire_department</span>
                     </div>
                     <div class="font-data-point text-data-point text-on-surface text-[32px] mb-1">1,284</div>
                     <div class="text-[12px] text-primary flex items-center gap-1 font-medium">
-                        <span class="material-symbols-outlined text-[14px]">trending_up</span> +14.2% vs last month
+                        <span class="material-symbols-outlined text-[14px]">trending_up</span> +14.2% so với tháng trước
                     </div>
                 </div>
                 <!-- Metric 2 -->
                 <div class="glass-panel p-5 border-l-4 border-l-secondary">
                     <div class="flex justify-between items-start mb-2">
-                        <span class="font-label-caps text-label-caps text-on-surface-variant">ACRES AFFECTED</span>
+                        <span class="font-label-caps text-label-caps text-on-surface-variant">DIỆN TÍCH ẢNH HƯỞNG (HA)</span>
                         <span class="material-symbols-outlined text-secondary text-[20px]">landscape</span>
                     </div>
                     <div class="font-data-point text-data-point text-on-surface text-[32px] mb-1">45.2K</div>
                     <div class="text-[12px] text-on-surface-variant flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[14px]">trending_flat</span> Stable vs last month
+                        <span class="material-symbols-outlined text-[14px]">trending_flat</span> Ổn định so với tháng trước
                     </div>
                 </div>
                 <!-- Metric 3 -->
                 <div class="glass-panel p-5 border-l-4 border-l-tertiary">
                     <div class="flex justify-between items-start mb-2">
-                        <span class="font-label-caps text-label-caps text-on-surface-variant">AVG CONTAINMENT</span>
+                        <span class="font-label-caps text-label-caps text-on-surface-variant">T/G KHỐNG CHẾ TB</span>
                         <span class="material-symbols-outlined text-tertiary text-[20px]">timer</span>
                     </div>
                     <div class="font-data-point text-data-point text-on-surface text-[32px] mb-1">14h 20m</div>
                     <div class="text-[12px] text-tertiary flex items-center gap-1 font-medium">
-                        <span class="material-symbols-outlined text-[14px]">trending_down</span> -2.5h improvement
+                        <span class="material-symbols-outlined text-[14px]">trending_down</span> -2.5h cải thiện
                     </div>
                 </div>
                 <!-- Metric 4 -->
                 <div class="glass-panel p-5 border-l-4 border-l-surface-variant">
                     <div class="flex justify-between items-start mb-2">
-                        <span class="font-label-caps text-label-caps text-on-surface-variant">ACTIVE SENSORS</span>
+                        <span class="font-label-caps text-label-caps text-on-surface-variant">CẢM BIẾN HOẠT ĐỘNG</span>
                         <span class="material-symbols-outlined text-on-surface-variant text-[20px]">router</span>
                     </div>
                     <div class="font-data-point text-data-point text-on-surface text-[32px] mb-1">9,402</div>
                     <div class="text-[12px] text-on-surface-variant flex items-center gap-1">
-                        98.4% operational
+                        98.4% đang hoạt động
                     </div>
                 </div>
             </div>
@@ -345,7 +345,7 @@
                 <div class="glass-panel p-6 lg:col-span-8 flex flex-col">
                     <div class="flex justify-between items-center mb-6">
                         <div>
-                            <h3 class="font-body-md font-semibold text-on-surface">Hotspot Frequency Trends</h3>
+                            <h3 class="font-body-md font-semibold text-on-surface">Biểu đồ Tần suất Điểm cháy</h3>
                             <p class="text-[13px] text-on-surface-variant mt-1">30-Day trailing thermal anomalies
                                 detected.</p>
                         </div>
@@ -408,8 +408,8 @@
                 <!-- Pie Chart: Land Type Damage (Spans 4 cols) -->
                 <div class="glass-panel p-6 lg:col-span-4 flex flex-col">
                     <div class="mb-6">
-                        <h3 class="font-body-md font-semibold text-on-surface">Damage by Land Type</h3>
-                        <p class="text-[13px] text-on-surface-variant mt-1">Distribution of affected zones.</p>
+                        <h3 class="font-body-md font-semibold text-on-surface">Thiệt hại theo Loại đất</h3>
+                        <p class="text-[13px] text-on-surface-variant mt-1">Phân bổ các khu vực bị ảnh hưởng.</p>
                     </div>
                     <div class="flex-1 flex flex-col items-center justify-center gap-6">
                         <!-- CSS Pie Chart -->
@@ -426,21 +426,21 @@
                             <div class="flex items-center justify-between text-[13px]">
                                 <div class="flex items-center gap-2">
                                     <div class="w-3 h-3 rounded-sm bg-primary"></div>
-                                    <span class="text-on-surface">Forest Canopy</span>
+                                    <span class="text-on-surface">Tán rừng</span>
                                 </div>
                                 <span class="font-data-point text-on-surface-variant">55%</span>
                             </div>
                             <div class="flex items-center justify-between text-[13px]">
                                 <div class="flex items-center gap-2">
                                     <div class="w-3 h-3 rounded-sm bg-secondary"></div>
-                                    <span class="text-on-surface">Grassland/Scrub</span>
+                                    <span class="text-on-surface">Đồng cỏ/Bụi rậm</span>
                                 </div>
                                 <span class="font-data-point text-on-surface-variant">30%</span>
                             </div>
                             <div class="flex items-center justify-between text-[13px]">
                                 <div class="flex items-center gap-2">
                                     <div class="w-3 h-3 rounded-sm bg-tertiary"></div>
-                                    <span class="text-on-surface">Residential Proximity</span>
+                                    <span class="text-on-surface">Gần khu dân cư</span>
                                 </div>
                                 <span class="font-data-point text-on-surface-variant">15%</span>
                             </div>
@@ -453,8 +453,8 @@
                 <!-- Bar Chart: YoY Comparison (Spans 4 cols) -->
                 <div class="glass-panel p-6 lg:col-span-4 flex flex-col">
                     <div class="mb-6">
-                        <h3 class="font-body-md font-semibold text-on-surface">YoY Severity Index</h3>
-                        <p class="text-[13px] text-on-surface-variant mt-1">Current year vs historical avg.</p>
+                        <h3 class="font-body-md font-semibold text-on-surface">Chỉ số Mức độ nghiêm trọng (YoY)</h3>
+                        <p class="text-[13px] text-on-surface-variant mt-1">Năm nay so với trung bình lịch sử.</p>
                     </div>
                     <div
                         class="flex-1 flex items-end justify-around gap-2 h-48 mt-4 border-b border-white/10 pb-2 relative">
@@ -516,11 +516,11 @@
                     <div
                         class="p-5 flex justify-between items-center border-b border-white/5 bg-surface-container-low/50">
                         <div>
-                            <h3 class="font-body-md font-semibold text-on-surface">Recent Telemetry Anomalies</h3>
+                            <h3 class="font-body-md font-semibold text-on-surface">Các điểm cháy và bất thường gần đây</h3>
                         </div>
                         <button
                             class="text-[12px] font-label-caps text-primary hover:text-primary-container transition-colors flex items-center gap-1">
-                            VIEW ALL <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                            XEM TẤT CẢ <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
                         </button>
                     </div>
                     <div class="overflow-x-auto">
@@ -529,16 +529,16 @@
                                 <tr class="bg-surface-container-highest/30">
                                     <th
                                         class="font-label-caps text-[11px] text-on-surface-variant py-3 px-5 border-b border-white/5">
-                                        TIMESTAMP (UTC)</th>
+                                        THỜI GIAN</th>
                                     <th
                                         class="font-label-caps text-[11px] text-on-surface-variant py-3 px-5 border-b border-white/5">
-                                        COORDINATES</th>
+                                        TỌA ĐỘ (X, Y)</th>
                                     <th
                                         class="font-label-caps text-[11px] text-on-surface-variant py-3 px-5 border-b border-white/5">
-                                        CONFIDENCE</th>
+                                        ĐỘ TIN CẬY</th>
                                     <th
                                         class="font-label-caps text-[11px] text-on-surface-variant py-3 px-5 border-b border-white/5">
-                                        STATUS</th>
+                                        TRẠNG THÁI</th>
                                 </tr>
                             </thead>
                             <tbody class="text-[13px]">
@@ -560,7 +560,7 @@
                                         <span
                                             class="inline-flex items-center gap-1 px-2 py-1 rounded bg-error-container/20 text-error-container text-[11px] font-label-caps border border-error-container/30">
                                             <span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
-                                            CRITICAL
+                                            NGUY HIỂM
                                         </span>
                                     </td>
                                 </tr>
@@ -581,7 +581,7 @@
                                     <td class="py-3 px-5 border-b border-white/5">
                                         <span
                                             class="inline-flex items-center gap-1 px-2 py-1 rounded bg-secondary-container/20 text-secondary-container text-[11px] font-label-caps border border-secondary-container/30">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> WARNING
+                                            <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> CẢNH BÁO
                                         </span>
                                     </td>
                                 </tr>
@@ -603,7 +603,7 @@
                                         <span
                                             class="inline-flex items-center gap-1 px-2 py-1 rounded bg-surface-variant/50 text-on-surface-variant text-[11px] font-label-caps border border-white/10">
                                             <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>
-                                            INVESTIGATING
+                                            ĐANG XÁC MINH
                                         </span>
                                     </td>
                                 </tr>
@@ -624,7 +624,7 @@
                                     <td class="py-3 px-5 border-b border-white/5">
                                         <span
                                             class="inline-flex items-center gap-1 px-2 py-1 rounded bg-tertiary-container/20 text-tertiary text-[11px] font-label-caps border border-tertiary-container/30">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> CLEARED
+                                            <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> ĐÃ XỬ LÝ
                                         </span>
                                     </td>
                                 </tr>

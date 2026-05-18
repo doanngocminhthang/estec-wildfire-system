@@ -3,7 +3,7 @@
 <html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Dashboard Overview - Wildfire Monitoring</title>
+<title>Dashboard Tổng quan - Wildfire Monitoring</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
@@ -129,13 +129,13 @@
 <!-- TopAppBar -->
 <header class="flex justify-between items-center w-full px-margin h-16 sticky top-0 z-50 bg-surface-container/80 backdrop-blur-xl border-b border-white/10 shadow-md">
 <div class="flex items-center gap-gutter">
-<h1 class="font-heading-lg text-heading-lg font-bold tracking-tighter text-primary">IGNIS MONITOR</h1>
+<h1 class="font-heading-lg text-heading-lg font-bold tracking-tighter text-primary">HỆ THỐNG GIÁM SÁT CHÁY RỪNG</h1>
 </div>
 <div class="flex items-center gap-margin">
 <!-- Search Bar placeholder -->
 <div class="hidden md:flex relative text-on-surface-variant">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm">search</span>
-<input class="bg-surface-container-high border border-white/10 rounded-full py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-on-surface placeholder:text-on-surface-variant/50 w-64 transition-all" placeholder="Search coordinates, units..." type="text"/>
+<input class="bg-surface-container-high border border-white/10 rounded-full py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-on-surface placeholder:text-on-surface-variant/50 w-64 transition-all" placeholder="Tìm kiếm tọa độ, đơn vị..." type="text"/>
 </div>
 <div class="flex items-center gap-unit">
 <button class="p-2 text-on-surface-variant hover:bg-white/5 transition-colors rounded-full active:scale-95 duration-100 flex items-center justify-center">
@@ -162,43 +162,43 @@
 <img alt="System Operator" class="w-full h-full object-cover" data-alt="A close up portrait of an operator wearing an earpiece headset in a dark, tech-heavy control room. Soft, cool blue lighting highlights their face against a pitch-black background with subtle bokeh of distant monitor screens. The mood is focused and clinical, reflecting a high-stakes, mission-control environment. Deep shadows contrast with crisp, technological highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBO0dufqOIX9jcekD1lXFCSs1R65Q2CtsiP2svWFdWdQ0bux7Hu92lW6_NKeD9uVs1emTKkWik5iDOXUMDKt-ERKK_yIa4JAu6EbM2ixlJGUuFXkmeFcPDhWJReDbtqwp_EEcn3Wadkxdgh2UW0vFUNpoBceNZ5g2hMiv-gUBf5KOpTDjuzNSnOn-gthW5TUshVPh0Iv_nGKV3U9SUSKgBYcL6UxOU3lyfk5pVtysTK-nFykqiB4mbuIJ4MzXRVw-hIT-UTwuef-wZ"/>
 </div>
 <div>
-<h2 class="font-label-caps text-label-caps text-primary uppercase tracking-widest">COMMAND CENTER</h2>
-<p class="text-xs text-on-surface-variant font-mono mt-1 opacity-70">SECTOR 7-G ACTIVE</p>
+<h2 class="font-label-caps text-label-caps text-primary uppercase tracking-widest">TRUNG TÂM ĐIỀU HÀNH</h2>
+<p class="text-xs text-on-surface-variant font-mono mt-1 opacity-70">KHU VỰC 7-G (ĐANG HOẠT ĐỘNG)</p>
 </div>
 </div>
 <button class="mt-4 w-full bg-error-container hover:bg-error hover:text-on-error text-on-error-container font-label-caps text-label-caps py-3 rounded-DEFAULT transition-colors uppercase tracking-wider flex items-center justify-center gap-2 border border-error/20 shadow-[0_0_15px_rgba(147,0,10,0.3)]">
 <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">warning</span>
-                    ISSUE EMERGENCY ALERT
+                    PHÁT TÍN HIỆU KHẨN CẤP
                 </button>
 </div>
 <!-- Navigation Tabs -->
 <div class="flex-1 flex flex-col gap-1 px-2">
 <a class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-xl font-bold font-label-caps text-label-caps" href="#">
 <span class="material-symbols-outlined text-lg">dashboard</span>
-                    Overview
+                    Tổng quan
                 </a>
 <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 rounded-xl transition-all font-label-caps text-label-caps" href="#">
 <span class="material-symbols-outlined text-lg">map</span>
-                    Live Map
+                    Bản đồ trực tuyến
                 </a>
 <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 rounded-xl transition-all font-label-caps text-label-caps" href="#">
 <span class="material-symbols-outlined text-lg">local_fire_department</span>
-                    Incidents
+                    Quản lý Sự cố
                 </a>
 <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 rounded-xl transition-all font-label-caps text-label-caps" href="#">
 <span class="material-symbols-outlined text-lg">query_stats</span>
-                    Analytics
+                    Thống kê & Báo cáo
                 </a>
 </div>
 <!-- SideNav Footer -->
 <div class="mt-auto flex flex-col gap-1 px-2 border-t border-white/5 pt-4">
 <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 rounded-xl transition-all font-label-caps text-label-caps" href="#">
 <span class="material-symbols-outlined text-lg">settings</span>
-                    System Settings
+                    Cài đặt hệ thống
                 </a>
 <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 rounded-xl transition-all font-label-caps text-label-caps" href="#">
 <span class="material-symbols-outlined text-lg">help</span>
-                    Support
+                    Hỗ trợ
                 </a>
 </div>
 </nav>
@@ -235,9 +235,9 @@
 <div class="flex justify-between items-start pointer-events-auto">
 <!-- Map Layer Toggles -->
 <div class="flex bg-surface-container-lowest/80 glass-panel rounded-lg border border-white/5 p-1 shadow-lg">
-<button class="px-4 py-1.5 text-xs font-label-caps text-label-caps rounded-DEFAULT bg-surface-bright/50 text-on-surface border border-white/10 shadow-sm">HEATMAP</button>
-<button class="px-4 py-1.5 text-xs font-label-caps text-label-caps rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors border border-transparent">WIND</button>
-<button class="px-4 py-1.5 text-xs font-label-caps text-label-caps rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors border border-transparent">TERRAIN</button>
+<button class="px-4 py-1.5 text-xs font-label-caps text-label-caps rounded-DEFAULT bg-surface-bright/50 text-on-surface border border-white/10 shadow-sm">BẢN ĐỒ NHIỆT</button>
+<button class="px-4 py-1.5 text-xs font-label-caps text-label-caps rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors border border-transparent">SỨC GIÓ</button>
+<button class="px-4 py-1.5 text-xs font-label-caps text-label-caps rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors border border-transparent">ĐỊA HÌNH</button>
 </div>
 </div>
 <!-- Center Empty Space for Map -->
@@ -247,7 +247,7 @@
 <!-- KPI Panel (Bottom Left) -->
 <div class="bg-surface-container/60 glass-panel border border-white/10 rounded-xl p-container-padding flex-1 shadow-xl flex gap-6 items-center">
 <div class="flex flex-col gap-1 border-r border-white/10 pr-6">
-<span class="text-xs font-label-caps text-label-caps text-on-surface-variant opacity-80 uppercase">Fire Weather Index</span>
+<span class="text-xs font-label-caps text-label-caps text-on-surface-variant opacity-80 uppercase">Chỉ số Thời tiết Cháy (FWI)</span>
 <div class="flex items-baseline gap-2">
 <span class="font-data-point text-data-point text-display-hero text-error">84.2</span>
 <span class="text-error text-sm font-bold flex items-center"><span class="material-symbols-outlined text-sm">trending_up</span></span>
@@ -258,15 +258,15 @@
 </div>
 <div class="flex-1 grid grid-cols-3 gap-4">
 <div class="flex flex-col gap-1">
-<span class="text-[10px] font-label-caps text-label-caps text-on-surface-variant opacity-70 uppercase flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">thermostat</span> Temp</span>
+<span class="text-[10px] font-label-caps text-label-caps text-on-surface-variant opacity-70 uppercase flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">thermostat</span> Nhiệt độ</span>
 <span class="font-data-point text-data-point text-on-surface text-2xl">42°C</span>
 </div>
 <div class="flex flex-col gap-1">
-<span class="text-[10px] font-label-caps text-label-caps text-on-surface-variant opacity-70 uppercase flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">air</span> Wind</span>
+<span class="text-[10px] font-label-caps text-label-caps text-on-surface-variant opacity-70 uppercase flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">air</span> Gió</span>
 <span class="font-data-point text-data-point text-on-surface text-2xl">45 <span class="text-sm text-on-surface-variant">km/h</span></span>
 </div>
 <div class="flex flex-col gap-1">
-<span class="text-[10px] font-label-caps text-label-caps text-on-surface-variant opacity-70 uppercase flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">water_drop</span> Humidity</span>
+<span class="text-[10px] font-label-caps text-label-caps text-on-surface-variant opacity-70 uppercase flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">water_drop</span> Độ ẩm</span>
 <span class="font-data-point text-data-point text-secondary-container text-2xl">12%</span>
 </div>
 </div>
@@ -274,25 +274,25 @@
 <!-- Ticker / Alerts Summary (Bottom Right) -->
 <div class="bg-surface-container/60 glass-panel border border-white/10 rounded-xl w-[400px] shadow-xl overflow-hidden flex flex-col">
 <div class="bg-surface-container-high/50 border-b border-white/10 px-4 py-2 flex justify-between items-center">
-<span class="text-[10px] font-label-caps text-label-caps text-on-surface-variant tracking-widest uppercase">Active Incidents</span>
-<span id="total-incidents" class="text-xs font-mono text-on-surface bg-surface-variant px-2 py-0.5 rounded text-center">TOTAL: --</span>
+<span class="text-[10px] font-label-caps text-label-caps text-on-surface-variant tracking-widest uppercase">Active Quản lý Sự cố</span>
+<span id="total-incidents" class="text-xs font-mono text-on-surface bg-surface-variant px-2 py-0.5 rounded text-center">TỔNG: --</span>
 </div>
 <div class="flex-1 flex flex-col justify-center px-4 py-3 gap-3">
 <div class="flex items-center gap-3">
 <div class="w-2 h-2 rounded-full bg-error animate-pulse shadow-[0_0_5px_rgba(255,180,171,0.8)]"></div>
-<span class="text-xs font-label-caps text-label-caps text-on-surface-variant w-16">EXTREME</span>
+<span class="text-xs font-label-caps text-label-caps text-on-surface-variant w-16">NGHIÊM TRỌNG</span>
 <div class="flex-1 bg-surface-container-high h-1.5 rounded-full overflow-hidden"><div class="bg-error h-full rounded-full w-[20%]"></div></div>
 <span class="text-xs font-data-point text-data-point text-on-surface w-4 text-right">2</span>
 </div>
 <div class="flex items-center gap-3">
 <div class="w-2 h-2 rounded-full bg-secondary-container shadow-[0_0_5px_rgba(251,140,0,0.8)]"></div>
-<span class="text-xs font-label-caps text-label-caps text-on-surface-variant w-16">HIGH</span>
+<span class="text-xs font-label-caps text-label-caps text-on-surface-variant w-16">MỨC CAO</span>
 <div class="flex-1 bg-surface-container-high h-1.5 rounded-full overflow-hidden"><div class="bg-secondary-container h-full rounded-full w-[45%]"></div></div>
 <span class="text-xs font-data-point text-data-point text-on-surface w-4 text-right">5</span>
 </div>
 <div class="flex items-center gap-3 opacity-60">
 <div class="w-2 h-2 rounded-full bg-tertiary"></div>
-<span class="text-xs font-label-caps text-label-caps text-on-surface-variant w-16">LOW</span>
+<span class="text-xs font-label-caps text-label-caps text-on-surface-variant w-16">MỨC THẤP</span>
 <div class="flex-1 bg-surface-container-high h-1.5 rounded-full overflow-hidden"><div class="bg-tertiary h-full rounded-full w-[60%]"></div></div>
 <span class="text-xs font-data-point text-data-point text-on-surface w-4 text-right">7</span>
 </div>
@@ -308,7 +308,7 @@
             // Fetch stats
             const statsRes = await fetch('http://localhost:8000/api/hotspots/stats');
             const statsData = await statsRes.json();
-            document.getElementById('total-incidents').innerText = `TOTAL: ${statsData.total_incidents}`;
+            document.getElementById('total-incidents').innerText = `TỔNG: ${statsData.total_incidents}`;
             
             // You can also fetch the actual hotspots to update the map markers
             // const hotspotsRes = await fetch('http://localhost:8000/api/hotspots');
