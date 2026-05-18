@@ -91,6 +91,18 @@ services:
     networks:
       - wildfire_net
 
+  # 6. Frontend Web Server (Nginx)
+  frontend_web:
+    build: ./frontend-code
+    container_name: wildfire_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend_api
+    networks:
+      - wildfire_net
+
 networks:
   wildfire_net:
     driver: bridge

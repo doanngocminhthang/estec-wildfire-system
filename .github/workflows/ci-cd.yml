@@ -1,0 +1,29 @@
+name: Wildfire System CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build Ingestion Worker
+      run: docker build -t estec-wildfire/ingestion-worker ./ingestion_worker
+
+    - name: Build Backend API
+      run: docker build -t estec-wildfire/backend-api ./backend_api
+      
+    - name: Build Frontend Web (Nginx)
+      run: docker build -t estec-wildfire/frontend-web ./frontend-code
+
+    - name: Check docker-compose config
+      run: docker compose config
