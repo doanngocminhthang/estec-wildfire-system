@@ -281,20 +281,20 @@
 <div class="flex items-center gap-3">
 <div class="w-2 h-2 rounded-full bg-error animate-pulse shadow-[0_0_5px_rgba(255,180,171,0.8)]"></div>
 <span class="text-xs font-label-caps text-label-caps text-on-surface-variant w-16">NGHIÊM TRỌNG</span>
-<div class="flex-1 bg-surface-container-high h-1.5 rounded-full overflow-hidden"><div class="bg-error h-full rounded-full w-[20%]"></div></div>
-<span class="text-xs font-data-point text-data-point text-on-surface w-4 text-right">2</span>
+<div class="flex-1 bg-surface-container-high h-1.5 rounded-full overflow-hidden"><div id="bar-extreme" class="bg-error h-full rounded-full w-[0%] transition-all duration-1000"></div></div>
+<span id="count-extreme" class="text-xs font-data-point text-data-point text-on-surface w-4 text-right">0</span>
 </div>
 <div class="flex items-center gap-3">
 <div class="w-2 h-2 rounded-full bg-secondary-container shadow-[0_0_5px_rgba(251,140,0,0.8)]"></div>
 <span class="text-xs font-label-caps text-label-caps text-on-surface-variant w-16">MỨC CAO</span>
-<div class="flex-1 bg-surface-container-high h-1.5 rounded-full overflow-hidden"><div class="bg-secondary-container h-full rounded-full w-[45%]"></div></div>
-<span class="text-xs font-data-point text-data-point text-on-surface w-4 text-right">5</span>
+<div class="flex-1 bg-surface-container-high h-1.5 rounded-full overflow-hidden"><div id="bar-high" class="bg-secondary-container h-full rounded-full w-[0%] transition-all duration-1000"></div></div>
+<span id="count-high" class="text-xs font-data-point text-data-point text-on-surface w-4 text-right">0</span>
 </div>
 <div class="flex items-center gap-3 opacity-60">
 <div class="w-2 h-2 rounded-full bg-tertiary"></div>
 <span class="text-xs font-label-caps text-label-caps text-on-surface-variant w-16">MỨC THẤP</span>
-<div class="flex-1 bg-surface-container-high h-1.5 rounded-full overflow-hidden"><div class="bg-tertiary h-full rounded-full w-[60%]"></div></div>
-<span class="text-xs font-data-point text-data-point text-on-surface w-4 text-right">7</span>
+<div class="flex-1 bg-surface-container-high h-1.5 rounded-full overflow-hidden"><div id="bar-low" class="bg-tertiary h-full rounded-full w-[0%] transition-all duration-1000"></div></div>
+<span id="count-low" class="text-xs font-data-point text-data-point text-on-surface w-4 text-right">0</span>
 </div>
 </div>
 </div>
@@ -310,6 +310,19 @@
             const statsData = await statsRes.json();
             document.getElementById('total-incidents').innerText = `TỔNG: ${statsData.total_incidents}`;
             
+            // Cập nhật số lượng sự cố theo mức độ
+            document.getElementById('count-extreme').innerText = statsData.extreme_count || 0;
+            document.getElementById('count-high').innerText = statsData.high_count || 0;
+            document.getElementById('count-low').innerText = statsData.low_count || 0;
+            
+            // Tính toán tỷ lệ phần trăm cho thanh progress bar
+            const total = (statsData.extreme_count || 0) + (statsData.high_count || 0) + (statsData.low_count || 0);
+            if (total > 0) {
+                document.getElementById('bar-extreme').style.width = `${(statsData.extreme_count / total) * 100}%`;
+                document.getElementById('bar-high').style.width = `${(statsData.high_count / total) * 100}%`;
+                document.getElementById('bar-low').style.width = `${(statsData.low_count / total) * 100}%`;
+            }
+
             // You can also fetch the actual hotspots to update the map markers
             // const hotspotsRes = await fetch('http://localhost:8000/api/hotspots');
             // const hotspotsData = await hotspotsRes.json();

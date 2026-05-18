@@ -58,6 +58,9 @@ class SystemStats(BaseModel):
     total_incidents: int
     active_sensors: int
     avg_confidence: float
+    extreme_count: int
+    high_count: int
+    low_count: int
 
 # --- Routes ---
 
@@ -158,10 +161,23 @@ def get_system_stats():
         avg_res = cursor.fetchone()['avg_confidence']
         avg_confidence = round(float(avg_res), 2) if avg_res else 0.0
         
+        # Mức độ nghiêm trọng
+        cursor.execute("SELECT COUNT(*) as extreme_count FROM hotspots WHERE confidence_score > 90")
+        extreme_count = cursor.fetchone()['extreme_count']
+        
+        cursor.execute("SELECT COUNT(*) as high_count FROM hotspots WHERE confidence_score <= 90 AND confidence_score > 70")
+        high_count = cursor.fetchone()['high_count']
+        
+        cursor.execute("SELECT COUNT(*) as low_count FROM hotspots WHERE confidence_score <= 70")
+        low_count = cursor.fetchone()['low_count']
+        
         return {
             "total_incidents": total_incidents,
             "active_sensors": active_sensors,
-            "avg_confidence": avg_confidence
+            "avg_confidence": avg_confidence,
+            "extreme_count": extreme_count,
+            "high_count": high_count,
+            "low_count": low_count
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

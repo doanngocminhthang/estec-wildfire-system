@@ -300,7 +300,7 @@
                         <span class="font-label-caps text-label-caps text-on-surface-variant">TỔNG INCIDENTS</span>
                         <span class="material-symbols-outlined text-primary text-[20px]">local_fire_department</span>
                     </div>
-                    <div class="font-data-point text-data-point text-on-surface text-[32px] mb-1">1,284</div>
+                    <div id="analytic-total" class="font-data-point text-data-point text-on-surface text-[32px] mb-1">...</div>
                     <div class="text-[12px] text-primary flex items-center gap-1 font-medium">
                         <span class="material-symbols-outlined text-[14px]">trending_up</span> +14.2% so với tháng trước
                     </div>
@@ -333,7 +333,7 @@
                         <span class="font-label-caps text-label-caps text-on-surface-variant">CẢM BIẾN HOẠT ĐỘNG</span>
                         <span class="material-symbols-outlined text-on-surface-variant text-[20px]">router</span>
                     </div>
-                    <div class="font-data-point text-data-point text-on-surface text-[32px] mb-1">9,402</div>
+                    <div id="analytic-sensors" class="font-data-point text-data-point text-on-surface text-[32px] mb-1">...</div>
                     <div class="text-[12px] text-on-surface-variant flex items-center gap-1">
                         98.4% đang hoạt động
                     </div>
@@ -541,93 +541,8 @@
                                         TRẠNG THÁI</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-[13px]">
-                                <tr class="hover:bg-white/5 transition-colors group cursor-pointer">
-                                    <td
-                                        class="py-3 px-5 border-b border-white/5 text-on-surface-variant font-data-point">
-                                        2023-10-29 14:32:01</td>
-                                    <td class="py-3 px-5 border-b border-white/5 text-on-surface font-data-point">
-                                        34.0522° N, 118.2437° W</td>
-                                    <td class="py-3 px-5 border-b border-white/5">
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-16 h-1.5 bg-surface-variant rounded-full overflow-hidden">
-                                                <div class="h-full bg-error-container w-[98%]"></div>
-                                            </div>
-                                            <span class="text-error-container font-medium">98%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-5 border-b border-white/5">
-                                        <span
-                                            class="inline-flex items-center gap-1 px-2 py-1 rounded bg-error-container/20 text-error-container text-[11px] font-label-caps border border-error-container/30">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
-                                            NGUY HIỂM
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-white/5 transition-colors group cursor-pointer">
-                                    <td
-                                        class="py-3 px-5 border-b border-white/5 text-on-surface-variant font-data-point">
-                                        2023-10-29 12:15:44</td>
-                                    <td class="py-3 px-5 border-b border-white/5 text-on-surface font-data-point">
-                                        39.7392° N, 104.9903° W</td>
-                                    <td class="py-3 px-5 border-b border-white/5">
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-16 h-1.5 bg-surface-variant rounded-full overflow-hidden">
-                                                <div class="h-full bg-secondary-container w-[75%]"></div>
-                                            </div>
-                                            <span class="text-secondary-container font-medium">75%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-5 border-b border-white/5">
-                                        <span
-                                            class="inline-flex items-center gap-1 px-2 py-1 rounded bg-secondary-container/20 text-secondary-container text-[11px] font-label-caps border border-secondary-container/30">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> CẢNH BÁO
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-white/5 transition-colors group cursor-pointer">
-                                    <td
-                                        class="py-3 px-5 border-b border-white/5 text-on-surface-variant font-data-point">
-                                        2023-10-29 09:41:12</td>
-                                    <td class="py-3 px-5 border-b border-white/5 text-on-surface font-data-point">
-                                        47.6062° N, 122.3321° W</td>
-                                    <td class="py-3 px-5 border-b border-white/5">
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-16 h-1.5 bg-surface-variant rounded-full overflow-hidden">
-                                                <div class="h-full bg-tertiary-container w-[42%]"></div>
-                                            </div>
-                                            <span class="text-tertiary-container font-medium">42%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-5 border-b border-white/5">
-                                        <span
-                                            class="inline-flex items-center gap-1 px-2 py-1 rounded bg-surface-variant/50 text-on-surface-variant text-[11px] font-label-caps border border-white/10">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>
-                                            ĐANG XÁC MINH
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-white/5 transition-colors group cursor-pointer">
-                                    <td
-                                        class="py-3 px-5 border-b border-white/5 text-on-surface-variant font-data-point">
-                                        2023-10-28 22:05:30</td>
-                                    <td class="py-3 px-5 border-b border-white/5 text-on-surface font-data-point">
-                                        36.1699° N, 115.1398° W</td>
-                                    <td class="py-3 px-5 border-b border-white/5">
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-16 h-1.5 bg-surface-variant rounded-full overflow-hidden">
-                                                <div class="h-full bg-tertiary w-[12%]"></div>
-                                            </div>
-                                            <span class="text-tertiary font-medium">12%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-5 border-b border-white/5">
-                                        <span
-                                            class="inline-flex items-center gap-1 px-2 py-1 rounded bg-tertiary-container/20 text-tertiary text-[11px] font-label-caps border border-tertiary-container/30">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> ĐÃ XỬ LÝ
-                                        </span>
-                                    </td>
-                                </tr>
+                            <tbody id="anomalies-tbody" class="text-[13px]">
+                                <!-- Dữ liệu sẽ được điền tự động bằng Javascript -->
                             </tbody>
                         </table>
                     </div>
@@ -635,6 +550,80 @@
             </div>
         </main>
     </div>
-</body>
+    <script>
+        async function fetchAnalyticsData() {
+            try {
+                // Fetch stats for the top metric cards
+                const statsRes = await fetch('http://localhost:8000/api/hotspots/stats');
+                const statsData = await statsRes.json();
+                document.getElementById('analytic-total').innerText = statsData.total_incidents;
+                document.getElementById('analytic-sensors').innerText = statsData.active_sensors;
 
+                // Fetch real hotspots for the anomalies table
+                const hotspotsRes = await fetch('http://localhost:8000/api/hotspots?limit=10');
+                const hotspotsData = await hotspotsRes.json();
+                
+                const tbody = document.getElementById('anomalies-tbody');
+                tbody.innerHTML = '';
+                
+                hotspotsData.forEach(hotspot => {
+                    // Determine styling based on confidence
+                    let colorClass = 'tertiary';
+                    let statusText = 'ĐÃ XỬ LÝ';
+                    let iconAnim = '';
+                    
+                    if (hotspot.confidence_score > 90) {
+                        colorClass = 'error-container';
+                        statusText = 'NGUY HIỂM';
+                        iconAnim = 'animate-pulse';
+                    } else if (hotspot.confidence_score > 70) {
+                        colorClass = 'secondary-container';
+                        statusText = 'CẢNH BÁO';
+                    } else if (hotspot.confidence_score > 40) {
+                        colorClass = 'on-surface-variant';
+                        statusText = 'ĐANG XÁC MINH';
+                    }
+
+                    // For the dot in the status badge, map error-container back to error, etc.
+                    let dotColorClass = colorClass;
+                    if (colorClass === 'error-container') dotColorClass = 'error';
+                    if (colorClass === 'secondary-container') dotColorClass = 'secondary';
+                    if (colorClass === 'tertiary-container') dotColorClass = 'tertiary';
+
+                    const rowHTML = `
+                        <tr class="hover:bg-white/5 transition-colors group cursor-pointer">
+                            <td class="py-3 px-5 border-b border-white/5 text-on-surface-variant font-data-point">
+                                ${new Date(hotspot.detected_at).toISOString().replace('T', ' ').substring(0, 19)}
+                            </td>
+                            <td class="py-3 px-5 border-b border-white/5 text-on-surface font-data-point">
+                                ${hotspot.latitude.toFixed(4)}° N, ${hotspot.longitude.toFixed(4)}° E
+                            </td>
+                            <td class="py-3 px-5 border-b border-white/5">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-16 h-1.5 bg-surface-variant rounded-full overflow-hidden">
+                                        <div class="h-full bg-${colorClass} w-[${hotspot.confidence_score}%]"></div>
+                                    </div>
+                                    <span class="text-${colorClass} font-medium">${hotspot.confidence_score.toFixed(1)}%</span>
+                                </div>
+                            </td>
+                            <td class="py-3 px-5 border-b border-white/5">
+                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-${colorClass}/20 text-${colorClass} text-[11px] font-label-caps border border-${colorClass}/30">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-${dotColorClass} ${iconAnim}"></span>
+                                    ${statusText}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += rowHTML;
+                });
+            } catch (error) {
+                console.error('Error fetching data from API:', error);
+            }
+        }
+
+        // Fetch immediately and update every 5 seconds
+        fetchAnalyticsData();
+        setInterval(fetchAnalyticsData, 5000);
+    </script>
+</body>
 </html>
