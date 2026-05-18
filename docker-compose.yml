@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # 1. Cơ sở dữ liệu Không gian (PostGIS)
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: wildfire_postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wildfire_admin
+      POSTGRES_PASSWORD: wildfire_password
+      POSTGRES_DB: wildfire_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./volumes/db-data:/var/lib/postgresql/data
+      # Mount thư mục chứa file SQL để tự động khởi tạo bảng khi chạy lần đầu
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - wildfire_net
+
+  # 2. Máy chủ Bản đồ GIS (GeoServer)
+  geoserver:
+    image: kartoza/geoserver:2.23.2
+    container_name: wildfire_geoserver
+    restart: unless-stopped
+    environment:
+      - GEOSERVER_ADMIN_PASSWORD=admin
+      - GEOSERVER_ADMIN_USER=admin
+      - INITIAL_MEMORY=2G
+      - MAXIMUM_MEMORY=4G
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./volumes/geoserver-data:/opt/geoserver/data_dir
+    depends_on:
+      - db
+    networks:
+      - wildfire_net
+
+  # 3. Message Broker (Mosquitto MQTT)
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: wildfire_mqtt
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001" # WebSockets
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./volumes/mosquitto-data:/mosquitto/data
+      - ./volumes/mosquitto-log:/mosquitto/log
+    networks:
+      - wildfire_net
+
+  # 4. Data Ingestion Worker (Nhận data từ MQTT lưu vào DB)
+  ingestion_worker:
+    build: ./ingestion_worker
+    container_name: wildfire_ingestion
+    restart: unless-stopped
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=wildfire_db
+      - DB_USER=wildfire_admin
+      - DB_PASSWORD=wildfire_password
+      - MQTT_BROKER=mqtt
+      - MQTT_PORT=1883
+      - MQTT_TOPIC=wildfire/alerts/#
+    depends_on:
+      - db
+      - mqtt
+    networks:
+      - wildfire_net
+
+networks:
+  wildfire_net:
+    driver: bridge

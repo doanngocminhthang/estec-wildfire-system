@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dashboard Overview - Wildfire Monitoring</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#2a3548",
+                        "error-container": "#93000a",
+                        "surface-container-highest": "#2a3548",
+                        "on-tertiary-container": "#003208",
+                        "on-secondary-container": "#5f3200",
+                        "secondary-fixed": "#ffdcc2",
+                        "surface-container": "#152031",
+                        "secondary-container": "#fb8c00",
+                        "surface-tint": "#ffb4ac",
+                        "outline-variant": "#5b403d",
+                        "secondary": "#ffb77b",
+                        "inverse-on-surface": "#263143",
+                        "on-surface": "#d8e3fb",
+                        "primary-container": "#ff544c",
+                        "surface-container-lowest": "#040e1f",
+                        "surface-container-high": "#1f2a3c",
+                        "secondary-fixed-dim": "#ffb77b",
+                        "on-primary-fixed": "#410002",
+                        "on-secondary": "#4c2700",
+                        "primary": "#ffb4ac",
+                        "on-surface-variant": "#e4beb9",
+                        "on-secondary-fixed": "#2e1500",
+                        "on-background": "#d8e3fb",
+                        "on-primary": "#690006",
+                        "on-error": "#690005",
+                        "on-tertiary-fixed": "#002204",
+                        "primary-fixed-dim": "#ffb4ac",
+                        "background": "#081425",
+                        "tertiary-fixed-dim": "#7ddc7a",
+                        "surface-dim": "#081425",
+                        "inverse-primary": "#bb171c",
+                        "surface-bright": "#2f3a4c",
+                        "inverse-surface": "#d8e3fb",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-fixed": "#98f994",
+                        "surface-container-low": "#111c2d",
+                        "primary-fixed": "#ffdad6",
+                        "outline": "#ab8985",
+                        "tertiary-container": "#46a34a",
+                        "on-tertiary-fixed-variant": "#005313",
+                        "on-primary-container": "#5c0005",
+                        "tertiary": "#7ddc7a",
+                        "on-secondary-fixed-variant": "#6d3a00",
+                        "surface": "#081425",
+                        "on-tertiary": "#00390a",
+                        "error": "#ffb4ab",
+                        "on-primary-fixed-variant": "#93000d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin": "24px",
+                        "unit": "4px",
+                        "container-padding": "20px",
+                        "panel-width-side": "380px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "display-hero": ["Inter"],
+                        "heading-lg": ["Inter"],
+                        "data-point": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "display-hero": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "heading-lg": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "data-point": ["20px", { "lineHeight": "1", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .map-bg {
+            background-color: #081425;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        
+        /* Minimal custom styles for things tailwind config doesn't perfectly cover yet */
+        .glass-panel {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .glass-card {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        
+        /* Hide scrollbar for feeds */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md h-screen w-screen overflow-hidden flex flex-col antialiased">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-margin h-16 sticky top-0 z-50 bg-surface-container/80 backdrop-blur-xl border-b border-white/10 shadow-md">
+<div class="flex items-center gap-gutter">
+<h1 class="font-heading-lg text-heading-lg font-bold tracking-tighter text-primary">IGNIS MONITOR</h1>
+</div>
+<div class="flex items-center gap-margin">
+<!-- Search Bar placeholder -->
+<div class="hidden md:flex relative text-on-surface-variant">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm">search</span>
+<input class="bg-surface-container-high border border-white/10 rounded-full py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-on-surface placeholder:text-on-surface-variant/50 w-64 transition-all" placeholder="Search coordinates, units..." type="text"/>
+</div>
+<div class="flex items-center gap-unit">
+<button class="p-2 text-on-surface-variant hover:bg-white/5 transition-colors rounded-full active:scale-95 duration-100 flex items-center justify-center">
+<span class="material-symbols-outlined">sensors</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-white/5 transition-colors rounded-full active:scale-95 duration-100 flex items-center justify-center relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border border-surface-container"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-white/5 transition-colors rounded-full active:scale-95 duration-100 flex items-center justify-center ml-2 border border-white/10">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<div class="flex-1 flex overflow-hidden relative">
+<!-- SideNavBar (Left) -->
+<nav class="fixed left-0 top-0 h-full flex flex-col p-unit z-40 bg-surface-container-low/90 backdrop-blur-lg border-r border-white/10 shadow-2xl docked h-screen w-panel-width-side transition-all duration-200 ease-in-out pt-20 pb-4">
+<!-- SideNav Header -->
+<div class="px-gutter mb-6 mt-2 flex flex-col gap-2">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high border border-white/10 flex items-center justify-center overflow-hidden">
+<img alt="System Operator" class="w-full h-full object-cover" data-alt="A close up portrait of an operator wearing an earpiece headset in a dark, tech-heavy control room. Soft, cool blue lighting highlights their face against a pitch-black background with subtle bokeh of distant monitor screens. The mood is focused and clinical, reflecting a high-stakes, mission-control environment. Deep shadows contrast with crisp, technological highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBO0dufqOIX9jcekD1lXFCSs1R65Q2CtsiP2svWFdWdQ0bux7Hu92lW6_NKeD9uVs1emTKkWik5iDOXUMDKt-ERKK_yIa4JAu6EbM2ixlJGUuFXkmeFcPDhWJReDbtqwp_EEcn3Wadkxdgh2UW0vFUNpoBceNZ5g2hMiv-gUBf5KOpTDjuzNSnOn-gthW5TUshVPh0Iv_nGKV3U9SUSKgBYcL6UxOU3lyfk5pVtysTK-nFykqiB4mbuIJ4MzXRVw-hIT-UTwuef-wZ"/>
+</div>
+<div>
+<h2 class="font-label-caps text-label-caps text-primary uppercase tracking-widest">COMMAND CENTER</h2>
+<p class="text-xs text-on-surface-variant font-mono mt-1 opacity-70">SECTOR 7-G ACTIVE</p>
+</div>
+</div>
+<button class="mt-4 w-full bg-error-container hover:bg-error hover:text-on-error text-on-error-container font-label-caps text-label-caps py-3 rounded-DEFAULT transition-colors uppercase tracking-wider flex items-center justify-center gap-2 border border-error/20 shadow-[0_0_15px_rgba(147,0,10,0.3)]">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">warning</span>
+                    ISSUE EMERGENCY ALERT
+                </button>
+</div>
+<!-- Navigation Tabs -->
+<div class="flex-1 flex flex-col gap-1 px-2">
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-xl font-bold font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg">dashboard</span>
+                    Overview
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 rounded-xl transition-all font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg">map</span>
+                    Live Map
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 rounded-xl transition-all font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg">local_fire_department</span>
+                    Incidents
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 rounded-xl transition-all font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg">query_stats</span>
+                    Analytics
+                </a>
+</div>
+<!-- SideNav Footer -->
+<div class="mt-auto flex flex-col gap-1 px-2 border-t border-white/5 pt-4">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 rounded-xl transition-all font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg">settings</span>
+                    System Settings
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 rounded-xl transition-all font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg">help</span>
+                    Support
+                </a>
+</div>
+</nav>
+<!-- Main Map Area (Underneath overlay panels) -->
+<div class="absolute inset-0 z-0 map-bg flex items-center justify-center overflow-hidden">
+<!-- Simulated Map Texture / Background -->
+<div class="absolute inset-0 opacity-20 pointer-events-none" data-alt="A highly detailed, starkly lit satellite topography map viewed from directly above. The terrain is rugged, showing deep valleys and high ridges in high-contrast monochrome, resembling a clinical radar scan. Thin, glowing cyan and red overlaid contour lines trace the elevation, adding a technical, diagnostic feel. The overall aesthetic is dark, functional, and militaristic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAalt7_unxLQ8Z6ZaUclw5GY9nKgNOUMy0OsBVpcgXBFnJgeZN6ThgYFcI73ZPEfFCbF41A5iyaT6tZa7gdNT6KO6y86iSN5fRwbjouq-S6nh_qlB5caAKCkxM9hO5jwonu1FPyqNlS3MObJjz6y1A4RMr6PVb1rwv6mPqN7OR9HvnEy-PWqJm4bVXWQYI4PwVmYMd31uz_t3YIca611BPRYSsbMwdVaA2c95bi0btImcFBtVWIe2MhtmRqx4275_Y7-yo3ZNc3bPci'); background-size: cover; background-position: center; mix-blend-mode: luminosity;"></div>
+<!-- Map Overlay Gradients for Depth -->
+<div class="absolute inset-0 bg-gradient-to-r from-surface-dim via-transparent to-surface-dim pointer-events-none"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-dim via-transparent to-transparent pointer-events-none"></div>
+<!-- Heatmap / Hotspot Markers (Simulated) -->
+<div class="absolute top-[30%] left-[45%] flex flex-col items-center justify-center">
+<div class="w-24 h-24 rounded-full bg-error/20 animate-pulse absolute"></div>
+<div class="w-12 h-12 rounded-full bg-error/40 animate-pulse absolute" style="animation-delay: 0.5s;"></div>
+<div class="w-4 h-4 rounded-full bg-error shadow-[0_0_15px_rgba(255,180,171,1)] z-10 relative flex items-center justify-center">
+<span class="absolute w-full h-full border border-error rounded-full animate-ping opacity-75"></span>
+</div>
+</div>
+<div class="absolute top-[60%] left-[60%] flex flex-col items-center justify-center">
+<div class="w-16 h-16 rounded-full bg-secondary-container/20 animate-pulse absolute"></div>
+<div class="w-3 h-3 rounded-full bg-secondary-container shadow-[0_0_10px_rgba(251,140,0,1)] z-10 relative"></div>
+</div>
+<!-- Sensor Markers -->
+<div class="absolute top-[40%] left-[30%] w-6 h-6 bg-surface-container-high border border-white/20 rounded-sm rotate-45 flex items-center justify-center group cursor-pointer hover:border-tertiary transition-colors z-20">
+<div class="w-2 h-2 bg-tertiary rounded-full -rotate-45 group-hover:shadow-[0_0_8px_rgba(125,220,122,1)]"></div>
+</div>
+<div class="absolute top-[20%] left-[55%] w-6 h-6 bg-surface-container-high border border-white/20 rounded-sm rotate-45 flex items-center justify-center group cursor-pointer hover:border-tertiary transition-colors z-20">
+<div class="w-2 h-2 bg-tertiary rounded-full -rotate-45 group-hover:shadow-[0_0_8px_rgba(125,220,122,1)]"></div>
+</div>
+</div>
+<!-- Content Overlay Container -->
+<div class="flex-1 ml-[380px] flex flex-col z-10 relative w-full h-full pointer-events-none p-margin gap-margin">
+<!-- Top Controls Row -->
+<div class="flex justify-between items-start pointer-events-auto">
+<!-- Map Layer Toggles -->
+<div class="flex bg-surface-container-lowest/80 glass-panel rounded-lg border border-white/5 p-1 shadow-lg">
+<button class="px-4 py-1.5 text-xs font-label-caps text-label-caps rounded-DEFAULT bg-surface-bright/50 text-on-surface border border-white/10 shadow-sm">HEATMAP</button>
+<button class="px-4 py-1.5 text-xs font-label-caps text-label-caps rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors border border-transparent">WIND</button>
+<button class="px-4 py-1.5 text-xs font-label-caps text-label-caps rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors border border-transparent">TERRAIN</button>
+</div>
+</div>
+<!-- Center Empty Space for Map -->
+<div class="flex-1"></div>
+<!-- Bottom Section (HUD / Stats) -->
+<div class="w-full flex gap-margin pointer-events-auto">
+<!-- KPI Panel (Bottom Left) -->
+<div class="bg-surface-container/60 glass-panel border border-white/10 rounded-xl p-container-padding flex-1 shadow-xl flex gap-6 items-center">
+<div class="flex flex-col gap-1 border-r border-white/10 pr-6">
+<span class="text-xs font-label-caps text-label-caps text-on-surface-variant opacity-80 uppercase">Fire Weather Index</span>
+<div class="flex items-baseline gap-2">
+<span class="font-data-point text-data-point text-display-hero text-error">84.2</span>
+<span class="text-error text-sm font-bold flex items-center"><span class="material-symbols-outlined text-sm">trending_up</span></span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-error h-full rounded-full w-[85%]"></div>
+</div>
+</div>
+<div class="flex-1 grid grid-cols-3 gap-4">
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-label-caps text-label-caps text-on-surface-variant opacity-70 uppercase flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">thermostat</span> Temp</span>
+<span class="font-data-point text-data-point text-on-surface text-2xl">42°C</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-label-caps text-label-caps text-on-surface-variant opacity-70 uppercase flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">air</span> Wind</span>
+<span class="font-data-point text-data-point text-on-surface text-2xl">45 <span class="text-sm text-on-surface-variant">km/h</span></span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-label-caps text-label-caps text-on-surface-variant opacity-70 uppercase flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">water_drop</span> Humidity</span>
+<span class="font-data-point text-data-point text-secondary-container text-2xl">12%</span>
+</div>
+</div>
+</div>
+<!-- Ticker / Alerts Summary (Bottom Right) -->
+<div class="bg-surface-container/60 glass-panel border border-white/10 rounded-xl w-[400px] shadow-xl overflow-hidden flex flex-col">
+<div class="bg-surface-container-high/50 border-b border-white/10 px-4 py-2 flex justify-between items-center">
+<span class="text-[10px] font-label-caps text-label-caps text-on-surface-variant tracking-widest uppercase">Active Incidents</span>
+<span class="text-xs font-mono text-on-surface bg-surface-variant px-2 py-0.5 rounded text-center">TOTAL: 14</span>
+</div>
+<div class="flex-1 flex flex-col justify-center px-4 py-3 gap-3">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-error animate-pulse shadow-[0_0_5px_rgba(255,180,171,0.8)]"></div>
+<span class="text-xs font-label-caps text-label-caps text-on-surface-variant w-16">EXTREME</span>
+<div class="flex-1 bg-surface-container-high h-1.5 rounded-full overflow-hidden"><div class="bg-error h-full rounded-full w-[20%]"></div></div>
+<span class="text-xs font-data-point text-data-point text-on-surface w-4 text-right">2</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-secondary-container shadow-[0_0_5px_rgba(251,140,0,0.8)]"></div>
+<span class="text-xs font-label-caps text-label-caps text-on-surface-variant w-16">HIGH</span>
+<div class="flex-1 bg-surface-container-high h-1.5 rounded-full overflow-hidden"><div class="bg-secondary-container h-full rounded-full w-[45%]"></div></div>
+<span class="text-xs font-data-point text-data-point text-on-surface w-4 text-right">5</span>
+</div>
+<div class="flex items-center gap-3 opacity-60">
+<div class="w-2 h-2 rounded-full bg-tertiary"></div>
+<span class="text-xs font-label-caps text-label-caps text-on-surface-variant w-16">LOW</span>
+<div class="flex-1 bg-surface-container-high h-1.5 rounded-full overflow-hidden"><div class="bg-tertiary h-full rounded-full w-[60%]"></div></div>
+<span class="text-xs font-data-point text-data-point text-on-surface w-4 text-right">7</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,17 @@
+# Thư mục chứa dữ liệu vật lý của Database, GeoServer, MQTT Broker
+volumes/
+database/data/
+geoserver_data/
+mosquitto/data/
+mosquitto/log/
+.env
+
+# MacOS / OS OS
+.DS_Store
+
+# Frontend/Backend dependencies (nếu có sau này)
+node_modules/
+dist/
+build/
+__pycache__/
+*.pyc
