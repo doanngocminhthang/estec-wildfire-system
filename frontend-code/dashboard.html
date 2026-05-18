@@ -275,7 +275,7 @@
 <div class="bg-surface-container/60 glass-panel border border-white/10 rounded-xl w-[400px] shadow-xl overflow-hidden flex flex-col">
 <div class="bg-surface-container-high/50 border-b border-white/10 px-4 py-2 flex justify-between items-center">
 <span class="text-[10px] font-label-caps text-label-caps text-on-surface-variant tracking-widest uppercase">Active Incidents</span>
-<span class="text-xs font-mono text-on-surface bg-surface-variant px-2 py-0.5 rounded text-center">TOTAL: 14</span>
+<span id="total-incidents" class="text-xs font-mono text-on-surface bg-surface-variant px-2 py-0.5 rounded text-center">TOTAL: --</span>
 </div>
 <div class="flex-1 flex flex-col justify-center px-4 py-3 gap-3">
 <div class="flex items-center gap-3">
@@ -301,4 +301,27 @@
 </div>
 </div>
 </div>
+</div>
+<script>
+    async function fetchDashboardData() {
+        try {
+            // Fetch stats
+            const statsRes = await fetch('http://localhost:8000/api/hotspots/stats');
+            const statsData = await statsRes.json();
+            document.getElementById('total-incidents').innerText = `TOTAL: ${statsData.total_incidents}`;
+            
+            // You can also fetch the actual hotspots to update the map markers
+            // const hotspotsRes = await fetch('http://localhost:8000/api/hotspots');
+            // const hotspotsData = await hotspotsRes.json();
+            // ... update UI ...
+        } catch (error) {
+            console.error('Error fetching data from API:', error);
+        }
+    }
+
+    // Fetch immediately on load
+    fetchDashboardData();
+    // Then every 5 seconds
+    setInterval(fetchDashboardData, 5000);
+</script>
 </body></html>
