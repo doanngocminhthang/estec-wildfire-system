@@ -73,6 +73,24 @@ services:
     networks:
       - wildfire_net
 
+  # 5. Backend API (FastAPI cung cấp dữ liệu cho Frontend)
+  backend_api:
+    build: ./backend_api
+    container_name: wildfire_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=wildfire_db
+      - DB_USER=wildfire_admin
+      - DB_PASSWORD=wildfire_password
+    depends_on:
+      - db
+    networks:
+      - wildfire_net
+
 networks:
   wildfire_net:
     driver: bridge
