@@ -1,0 +1,63 @@
+!table
+!version 300
+!charset WindowsLatin1
+
+Definition Table
+  Type NATIVE Charset "WindowsLatin1"
+  Fields 56
+    tt Integer ;
+    id Integer ;
+    matinh Integer ;
+    mahuyen Integer ;
+    maxa Integer ;
+    xa Char (20) ;
+    tk Char (10) ;
+    khoanh Char (5) ;
+    lo Char (6) ;
+    thuad Integer ;
+    tobando Char (8) ;
+    ddanh Char (25) ;
+    dtich Decimal (9, 2) ;
+    nggocr Integer ;
+    ldlr Char (10) ;
+    maldlr Integer ;
+    sldlr Char (40) ;
+    namtr Integer ;
+    captuoi Integer ;
+    ktan Integer ;
+    nggocrt Integer ;
+    thanhrung Integer ;
+    mgo Decimal (7, 1) ;
+    mtn Decimal (9, 3) ;
+    mgolo Decimal (9, 1) ;
+    mtnlo Decimal (9, 3) ;
+    lapdia Integer ;
+    malr3 Integer ;
+    mdsd Char (20) ;
+    mamdsd Integer ;
+    dtuong Integer ;
+    churung Char (30) ;
+    machur Integer ;
+    trchap Integer ;
+    quyensd Integer ;
+    thoihansd Integer ;
+    khoan Integer ;
+    nqh Integer ;
+    nguoink Char (20) ;
+    nguoitrch Char (20) ;
+    mangnk Integer ;
+    mangtrch Integer ;
+    ngsinh Integer ;
+    Kd Decimal (9, 5) ;
+    Vd Decimal (9, 5) ;
+    Capkd Integer ;
+    Capvd Integer ;
+    locu Char (6) ;
+    vitrithua Integer ;
+    tinh Char (20) ;
+    huyen Char (20) ;
+    GHICHU Char (30) ;
+    kdutm Decimal (10, 5) ;
+    vdutm Decimal (10, 5) ;
+    cao Decimal (5, 0) ;
+    duongpc Decimal (2, 0) ;

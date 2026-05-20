@@ -1,0 +1,23 @@
+ID,Xa,KinhDo,ViDo,TenDonVi,TenNguoiDungDau,SoNguoi,SoOToChuaChay,SoMayBomChuaChay,SoMayThoiGio,SoMayCua,SoBanDapSat,DienThoai,Email,LoaiDonVi,Password,Username
+1,Minh Phú,21.279445,105.797565,Ban quản lý rừng Phòng hộ - Đặc dụng Hà Nội,Nguyễn Thị Thu Hằng,150,0,4,30,4,50,915032652,,churunglon,032652,thuhang
+2,Nam Sơn,21.287147,105.804957,Tiểu Đoàn 903,Nguyễn Thành Hưng,30,0,0,0,0,30,986692426,,quandoi,692426,thanhhung
+3,Hồng Kỳ,21.304492,105.840982,Lữ đoàn 86,Lê Xuân Dũng,50,0,0,0,0,30,989330556,,quandoi,330556,xuandung
+4,Phù Linh,21.287855,105.833579,Hạt kiemlam Sóc Sơn,Nguyễn Văn Thành,5,0,0,0,0,0,913210919,,kiemlam,210919,vanthanh
+5,Nam Sơn,21.312802,105.862333,Trung đoàn 165,Anh Sơn,50,0,0,0,0,50,,,quandoi,123456,anhson
+6,TT Sóc Sơn,21.258541,105.851753,Cảnh sát PCCC Chuyên nghiệp huyện Sóc Sơn,Trần Phương Đông,15,2,4,0,0,0,943095929,,congan,095929,phuongdong
+7,Tiên Dược,21.280352,105.845618,Tiểu đoàn 371,Nguyễn Viết Cường,30,0,0,0,0,30,972700733,,quandoi,700733,vietcuong
+8,TT Sóc Sơn,21.256707,105.84736,Ban quản lý rừng huyện Sóc Sơn,Tạ Văn Chiêm,6,0,2,2,2,10,984187997,,churunglon,187997,vanchiem
+9,Minh Phú,21.271046,105.778389,xa Minh Phú,Nguyễn Văn Hân,10,0,0,1,0,10,962237666,,xa,237666,vanhan
+10,Nam Sơn,21.316411,105.826652,xa Nam Sơn,Hoàng Văn Chung,10,0,0,1,0,10,989993937,,xa,993937,vanchung
+11,Hồng Kỳ,21.316583,105.855433,xa Hồng Kỳ,Trần Ngọc Hà,10,0,0,1,0,10,985257280,,xa,257280,ngocha
+12,Tiên Dược,21.250046,105.848573,xa Tiên Dược,Ngô Thị Tuyết Chinh,10,0,0,1,0,10,975524666,,xa,524666,tuyetchinh
+13,Quang Tiến,21.238042,105.805024,xa Quang Tiến,Lê Xuân Dũng,10,0,0,1,0,10,912378763,,xa,378763,xuandung2
+14,Hiền Ninh,21.247425,105.791069,xa Hiền Ninh,Ngô Văn Chuyên,10,0,0,1,0,10,964155558,,xa,155558,vanchuyen
+15,Phù Linh,21.270829,105.854292,xa Phù Linh,Nguyễn Văn Nam,10,0,0,1,0,10,914385178,,xa,385178,vannam
+16,,,,ESTEC,Đỗ Văn Hướng,1,0,0,0,0,0,,,kysu,123456,vanhuong
+17,,,,ESTEC,Chú Quỳnh,1,0,0,0,0,0,,,,123456,quynh
+18,,,,ESTEC,Võ Lý Hoàng Hoan,1,0,0,0,0,0,,hoan.vo@biendongco.vn,kysu,123456,hoanghoan
+19,,,,ESTEC,Hoàng Tấn Nguyên,1,0,0,0,0,0,,,kysu,123456,tannguyen
+20,,,,ESTEC,Đoàn Ngọc Minh Thắng,1,0,0,0,0,0,,thang.doan@biendongco.vn,kysu,123456,minhthang
+21,,,,ESTEC,Hồ Nhật Huy,1,0,0,0,0,0,,,kysu,123456,nhathuy
+22,,,,ESTEC,RnD,1,0,0,0,0,0,,hoanghoan92nk@gmail.com,kysu,123456,admin

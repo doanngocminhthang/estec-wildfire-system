@@ -1,0 +1,21 @@
+﻿STT,DuongKinh,PhuongPhap,ChienLuoc,ChienThuat,KyThuat,Nhanluc,PhuongTien,ThoiGianCC
+3,6,Trực tiếp,Thủ công,Dập chặn đầu,Dùng bàn dập và cành cây đập trực tiếp vào ngọn lửa,3,"1 Bàn dập, 1 Máy thổi gió, 1 Cành cây",7
+4,8,Trực tiếp,Thủ công,Dập chặn đầu,Dùng bàn dập và cành cây đập trực tiếp vào ngọn lửa,5,"1 Bàn dập, 1Máy thổi gió, 3 Cành cây",8
+5,10,Trực tiếp,Thủ công + cơ giới,Dập chặn đầu + 2 bên,"Bàn dập và cành cây dập hai bên + Máy thổi gió vào 2 bên phía trước, phun nước phía trước",6,"1 Bàn dập, 1 Máy thổi gió, 1 Dao phát, 3 Cành cây",8
+6,13,Trực tiếp,Thủ công + cơ giới,Dập chặn đầu + 2 bên,"Bàn dập và cành cây dập hai bên + Máy thổi gió vào 2 bên phía trước, phun nước phía trước",7,"1 Bàn dập, 1 Máy thổi gió, 1 Dao phát, 4 Cành cây",10
+7,15,Trực tiếp,Thủ công + cơ giới,Dập chặn đầu + 2 bên,"Bàn dập và cành cây dập hai bên + Máy thổi gió vào 2 bên phía trước, phun nước phía trước",8,"1 Bàn dập, 1 Máy thổi gió, 1 Dao phát, 5 Cành cây",10
+8,17,Trực tiếp,Thủ công + cơ giới,Dập chặn đầu + 2 bên,"Bàn dập và cành cây dập hai bên + Máy thổi gió vào 2 bên phía trước, phun nước phía trước",10,"2 Bàn dập, 2 Máy thổi gió, 2 Dao phát, 4 Cành cây",7
+9,19,Trực tiếp,Thủ công + cơ giới,Dập chặn đầu + 2 bên,"Bàn dập và cành cây dập hai bên + Máy thổi gió vào 2 bên phía trước, phun nước phía trước",11,"2 Bàn dập, 2 Máy thổi gió, 2 Dao phát, 5 Cành cây",8
+10,21,Trực tiếp,Thủ công + cơ giới,Dập chặn đầu + 2 bên,"Bàn dập và cành cây dập hai bên + Máy thổi gió vào 2 bên phía trước, phun nước phía trước",13,"2 Bàn dập, 2 Máy thổi gió, 2 Dao phát, 7 Cành cây",9
+11,23,Trực tiếp,Thủ công + cơ giới,Dập chặn đầu + 2 bên,"Bàn dập và cành cây dập hai bên + Máy thổi gió vào 2 bên phía trước, phun nước phía trước",16,"3 Bàn dập, 3 Máy thổi gió, 3 Dao phát, 7 Cành cây",8
+12,25,Trực tiếp,Thủ công + cơ giới,Dập chặn đầu + 2 bên,"Bàn dập và cành cây dập hai bên + Máy thổi gió vào 2 bên phía trước, phun nước phía trước",17,"3 Bàn dập, 3 Máy thổi gió, 3 Dao phát, 8 Cành cây",11
+13,30,Trực tiếp,Thủ công,Đập chặn đầu,"Dùng bàn dập và cành cây đập trực diện vào ngọn lửa",3,"1 Bàn dập, 1 Máy thổi gió, 1 Cành cây",7
+14,50,Trực tiếp,Thủ công,Đập chặn đầu,"Dùng bàn dập và cành cây đập trực diện vào ngọn lửa kết hợp phát đường nhỏ",5,"1 Bàn dập, 1 Máy thổi gió, 3 Cành cây",8
+15,70,Trực tiếp,Thủ công + cơ giới,Đập chặn đầu + 2 bên,"Bàn dập và cành cây dập hai bên + máy thổi gió hai bên phía trước, phun nước chặn lửa",6,"1 Bàn dập, 1 Máy thổi gió, 1 Dao phát, 3 Cành cây",8
+16,150,Gián tiếp,Đốt ngược (chặn xa),Đốt từ băng trắng,"Dọn sạch cỏ rác tạo băng trắng rộng 10-20 m, đốt ngược từ băng trắng cách đám cháy ~100 m để 2 ngọn lửa gặp nhau",8,"2 Máy thổi gió, Dao phát, 4 Cành cây, 1, Máy bơm nước",15-20
+17,200,Gián tiếp,Bao vây - chia cắt,Đắp đường chặn,"Phát đường băng rộng 6-10 m chia cắt khu vực cháy, chặn hướng gió chính",10,"2 Dao phát, 2 Máy thổi gió, 1 Bàn dập, 4 Cành cây",25-30
+18,250,Trực tiếp,Dùng nước,Phun trực diện,"Sử dụng máy bơm nước hoặc xe chữa cháy phun trực diện vào ngọn lửa, kết hợp dập tỉa bằng bàn dập",7,"2, Máy bơm nước, 1 Bàn dập, 1 Máy thổi gió, 2 Cành cây",10-12
+19,300,Trực tiếp,Cơ giới,Dập cơ giới,"Dùng máy ủi mở đường băng cản lửa, máy thổi gió công suất lớn để thổi dập ngọn lửa, con người hỗ trợ hai bên",12,"1 máy ủi, 3 Máy thổi gió, 4 Cành cây, 2 Bàn dập",15-20
+20,350,Gián tiếp,Hóa chất,Phun chất chống cháy,"Sử dụng dung dịch hóa chất tạo đường cản lửa hoặc phun phủ lên diện tích trước đám cháy",6,"1 bình hóa chất xách tay, 2, Máy bơm nước nhỏ, 2 Cành cây, 1 Máy thổi gió",20
+21,400,Trực tiếp,Thủ công,Bao vây dập tỉa,"Dùng bàn dập, cành cây và dao phát khống chế dần từ các hướng, thu hẹp diện cháy",9,"2 Bàn dập, 4 Cành cây, 2 Dao phát, 1 Máy thổi gió",20-25
+22,180,Gián tiếp,Kết hợp thủ công - cơ giới,"Đốt chặn + băng trắng cơ giới","Vừa tạo băng trắng bằng máy cơ giới vừa tổ chức đốt chặn, nhân lực thủ công dập hai bên",15,"1 máy ủi, 2 Máy thổi gió, 2 Dao phát, 4 Cành cây, 2 Bàn dập",25-30
