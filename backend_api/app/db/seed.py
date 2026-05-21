@@ -37,12 +37,25 @@ _PROFILE_COLUMNS = [
 
 
 def migrate_schema() -> None:
-    """Add any missing columns to existing tables (idempotent)."""
+    """Add any missing columns/tables to existing schema (idempotent)."""
     with engine.connect() as conn:
         for col, col_type in _PROFILE_COLUMNS:
             conn.execute(text(
                 f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {col_type}"
             ))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS bulletins (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(200) NOT NULL,
+                body TEXT NOT NULL,
+                priority VARCHAR(20) NOT NULL DEFAULT 'info',
+                is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                created_by_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                CONSTRAINT bulletins_priority_check
+                    CHECK (priority IN ('info', 'warning', 'critical'))
+            )
+        """))
         conn.commit()
 
 

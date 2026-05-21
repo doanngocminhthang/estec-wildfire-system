@@ -126,6 +126,27 @@ class Incident(Base):
     )
 
 
+class Bulletin(Base):
+    __tablename__ = "bulletins"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    body = Column(Text, nullable=False)
+    priority = Column(String(20), nullable=False, server_default=expression.text("'info'"))
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    created_by = relationship("User")
+
+    __table_args__ = (
+        CheckConstraint(
+            "priority IN ('info', 'warning', 'critical')",
+            name="bulletins_priority_check",
+        ),
+    )
+
+
 class Task(Base):
     __tablename__ = "tasks"
 

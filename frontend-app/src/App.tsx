@@ -10,6 +10,7 @@ import Hotspots from './pages/Hotspots'
 import Users from './pages/Users'
 import Profile from './pages/Profile'
 import AuditLog from './pages/AuditLog'
+import Bulletins from './pages/Bulletins'
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="users"      element={<Users />} />
           <Route path="profile"    element={<Profile />} />
           <Route path="audit-log"  element={<AuditLog />} />
+          <Route path="bulletins"  element={<Bulletins />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

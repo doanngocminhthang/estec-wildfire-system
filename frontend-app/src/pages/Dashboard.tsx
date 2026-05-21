@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import dataApi from '../api/dataClient'
+import api from '../api/client'
 
 interface Stats {
   total_incidents: number
@@ -24,6 +25,15 @@ interface Incident {
 interface Health {
   status: string
   database: string
+}
+
+interface Bulletin {
+  id: number
+  title: string
+  body: string
+  priority: 'info' | 'warning' | 'critical'
+  created_by_username: string | null
+  created_at: string
 }
 
 function StatCard({ icon, label, value, sub, iconColor, iconBg, accent }: {
@@ -63,16 +73,19 @@ export default function Dashboard() {
   const [incidents, setIncidents] = useState<Incident[]>([])
   const [health,    setHealth]    = useState<Health | null>(null)
   const [loading,   setLoading]   = useState(true)
+  const [bulletins, setBulletins] = useState<Bulletin[]>([])
 
   useEffect(() => {
     Promise.allSettled([
       dataApi.get<Stats>('/hotspots/stats'),
       dataApi.get<Incident[]>('/incidents?limit=5'),
       dataApi.get<Health>('/health'),
-    ]).then(([statsRes, incRes, healthRes]) => {
-      if (statsRes.status === 'fulfilled')   setStats(statsRes.value.data)
-      if (incRes.status === 'fulfilled')     setIncidents(incRes.value.data.slice(0, 5))
-      if (healthRes.status === 'fulfilled')  setHealth(healthRes.value.data)
+      api.get<Bulletin[]>('/bulletins/'),
+    ]).then(([statsRes, incRes, healthRes, bulletinsRes]) => {
+      if (statsRes.status === 'fulfilled')    setStats(statsRes.value.data)
+      if (incRes.status === 'fulfilled')      setIncidents(incRes.value.data.slice(0, 5))
+      if (healthRes.status === 'fulfilled')   setHealth(healthRes.value.data)
+      if (bulletinsRes.status === 'fulfilled') setBulletins(bulletinsRes.value.data.slice(0, 3))
     }).finally(() => setLoading(false))
   }, [])
 
@@ -94,6 +107,32 @@ export default function Dashboard() {
         <h1 className="text-lg font-bold text-[#1e293b]">Bảng điều khiển tổng quan</h1>
         <p className="text-xs text-[#64748b] mt-0.5 capitalize">{now}</p>
       </div>
+
+      {/* Bulletin banners */}
+      {bulletins.length > 0 && (
+        <div className="space-y-2">
+          {bulletins.map(b => {
+            const styles = {
+              critical: 'bg-red-50 border-red-300 text-red-800',
+              warning:  'bg-amber-50 border-amber-300 text-amber-800',
+              info:     'bg-blue-50 border-blue-300 text-blue-800',
+            }
+            const icons = { critical: 'emergency', warning: 'warning', info: 'campaign' }
+            return (
+              <div key={b.id} className={`flex items-start gap-3 px-4 py-3 rounded-xl border text-sm ${styles[b.priority]}`}>
+                <span className="material-symbols-outlined text-lg flex-shrink-0 mt-0.5">{icons[b.priority]}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold">{b.title}</p>
+                  <p className="text-xs mt-0.5 opacity-80 line-clamp-2">{b.body}</p>
+                </div>
+                <Link to="/bulletins" className="text-xs underline opacity-70 hover:opacity-100 flex-shrink-0">
+                  Xem thêm
+                </Link>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Stats */}
       {loading ? (
