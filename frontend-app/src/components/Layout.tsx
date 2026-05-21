@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
+import NotificationBell from './NotificationBell'
 
 export default function Layout() {
   return (
@@ -12,9 +13,12 @@ export default function Layout() {
           <span className="text-xs text-[#64748b]">
             Hệ thống Phòng cháy chữa cháy rừng tỉnh Thanh Hóa
           </span>
-          <div className="ml-auto flex items-center gap-2 text-xs text-[#64748b]">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-            Trực tuyến
+          <div className="ml-auto flex items-center gap-3">
+            <NotificationBell />
+            <div className="flex items-center gap-1.5 text-xs text-[#64748b]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+              Trực tuyến
+            </div>
           </div>
         </header>
         <main className="flex-1 overflow-auto">

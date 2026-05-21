@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db_session
 from app.db.models import User
 from app.middleware.auth import get_current_user, require_role
-from app.schemas.user_schema import UserCreate, UserResponse, UserUpdate
-from app.services.user_service import create_user, delete_user, get_user_by_id, get_users, update_user
+from app.schemas.user_schema import ProfileUpdate, UserCreate, UserResponse, UserUpdate
+from app.services.user_service import create_user, delete_user, get_user_by_id, get_users, update_me, update_user
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -16,6 +16,16 @@ router = APIRouter(prefix="/users", tags=["users"])
 def get_me(current_user: User = Depends(get_current_user)):
     """Lấy thông tin người dùng hiện tại."""
     return current_user
+
+
+@router.patch("/me", response_model=UserResponse)
+def update_me_endpoint(
+    payload: ProfileUpdate,
+    db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
+):
+    """Cập nhật hồ sơ cá nhân (user tự cập nhật)."""
+    return update_me(db, current_user, payload)
 
 
 @router.get("/", response_model=List[UserResponse])

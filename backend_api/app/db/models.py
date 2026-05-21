@@ -34,6 +34,9 @@ class User(Base):
     email = Column(String(100), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+    full_name = Column(String(150), nullable=True)
+    phone = Column(String(30), nullable=True)
+    unit = Column(String(150), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
@@ -109,6 +112,8 @@ class Incident(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
+    tasks = relationship("Task", back_populates="incident")
+
     __table_args__ = (
         CheckConstraint(
             "status IN ('uncontrolled', 'containing', 'controlled')",
@@ -117,5 +122,31 @@ class Incident(Base):
         CheckConstraint(
             "priority IN ('low', 'medium', 'high', 'critical')",
             name="incidents_priority_check",
+        ),
+    )
+
+
+class Task(Base):
+    __tablename__ = "tasks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    incident_id = Column(Integer, ForeignKey("incidents.id", ondelete="CASCADE"), nullable=False, index=True)
+    assigned_to_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    assigned_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    status = Column(String(30), nullable=False, server_default=expression.text("'pending'"))
+    deadline = Column(DateTime(timezone=True), nullable=True)
+    note = Column(Text, nullable=True)
+    result_note = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    incident = relationship("Incident", back_populates="tasks")
+    assigned_to = relationship("User", foreign_keys=[assigned_to_id])
+    assigned_by = relationship("User", foreign_keys=[assigned_by_id])
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'in_progress', 'done', 'cancelled')",
+            name="tasks_status_check",
         ),
     )

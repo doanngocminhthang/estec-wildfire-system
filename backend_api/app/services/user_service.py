@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
 from app.db.models import Role, User
-from app.schemas.user_schema import UserCreate, UserUpdate
+from app.schemas.user_schema import ProfileUpdate, UserCreate, UserUpdate
 
 
 def get_users(db: Session) -> List[User]:
@@ -46,6 +46,23 @@ def update_user(db: Session, user_id: int, payload: UserUpdate) -> User:
         user.is_active = payload.is_active
     if payload.role_names is not None:
         user.roles = db.query(Role).filter(Role.name.in_(payload.role_names)).all()
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def update_me(db: Session, user: User, payload: ProfileUpdate) -> User:
+    if payload.email is not None:
+        existing = db.query(User).filter(User.email == payload.email, User.id != user.id).first()
+        if existing:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email đã được sử dụng bởi tài khoản khác")
+        user.email = payload.email
+    if payload.full_name is not None:
+        user.full_name = payload.full_name
+    if payload.phone is not None:
+        user.phone = payload.phone
+    if payload.unit is not None:
+        user.unit = payload.unit
     db.commit()
     db.refresh(user)
     return user

@@ -5,7 +5,10 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import MapPage from './pages/MapPage'
 import Incidents from './pages/Incidents'
-import Placeholder from './pages/Placeholder'
+import Analytics from './pages/Analytics'
+import Hotspots from './pages/Hotspots'
+import Users from './pages/Users'
+import Profile from './pages/Profile'
 
 export default function App() {
   return (
@@ -24,9 +27,10 @@ export default function App() {
           <Route path="dashboard"  element={<Dashboard />} />
           <Route path="map"        element={<MapPage />} />
           <Route path="incidents"  element={<Incidents />} />
-          <Route path="hotspots"   element={<Placeholder title="Điểm cháy" />} />
-          <Route path="analytics"  element={<Placeholder title="Phân tích" />} />
-          <Route path="users"      element={<Placeholder title="Quản lý người dùng" />} />
+          <Route path="hotspots"   element={<Hotspots />} />
+          <Route path="analytics"  element={<Analytics />} />
+          <Route path="users"      element={<Users />} />
+          <Route path="profile"    element={<Profile />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

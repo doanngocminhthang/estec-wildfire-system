@@ -1,28 +1,53 @@
+from sqlalchemy import text
+
 from app.core.security import hash_password
-from app.db.database import SessionLocal
+from app.db.database import SessionLocal, engine
 from app.db.models import Permission, Role, User
 
 _DEFAULT_ROLES = [
-    ("admin", "Quản trị hệ thống"),
+    ("admin",      "Quản trị hệ thống"),
     ("dispatcher", "Điều phối viên"),
-    ("ranger", "Kiểm lâm viên"),
-    ("citizen", "Công dân"),
+    ("ranger",     "Kiểm lâm viên"),
+    ("citizen",    "Công dân"),
 ]
 
 _DEFAULT_PERMISSIONS = [
-    ("view_incidents", "Xem sự cố"),
+    ("view_incidents",   "Xem sự cố"),
     ("create_incidents", "Tạo sự cố"),
-    ("edit_incidents", "Chỉnh sửa sự cố"),
+    ("edit_incidents",   "Chỉnh sửa sự cố"),
     ("delete_incidents", "Xóa sự cố"),
-    ("view_users", "Xem người dùng"),
-    ("manage_users", "Quản lý người dùng"),
-    ("view_hotspots", "Xem điểm cháy"),
-    ("view_analytics", "Xem phân tích"),
+    ("view_users",       "Xem người dùng"),
+    ("manage_users",     "Quản lý người dùng"),
+    ("view_hotspots",    "Xem điểm cháy"),
+    ("view_analytics",   "Xem phân tích"),
+]
+
+_DEFAULT_RANGERS = [
+    ("ranger01", "ranger01@wildfire.local", "Ranger@123"),
+    ("ranger02", "ranger02@wildfire.local", "Ranger@123"),
+    ("ranger03", "ranger03@wildfire.local", "Ranger@123"),
 ]
 
 
+_PROFILE_COLUMNS = [
+    ("full_name", "VARCHAR(150)"),
+    ("phone",     "VARCHAR(30)"),
+    ("unit",      "VARCHAR(150)"),
+]
+
+
+def migrate_schema() -> None:
+    """Add any missing columns to existing tables (idempotent)."""
+    with engine.connect() as conn:
+        for col, col_type in _PROFILE_COLUMNS:
+            conn.execute(text(
+                f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {col_type}"
+            ))
+        conn.commit()
+
+
 def seed_default_data() -> None:
-    """Seed roles, permissions và admin user nếu chưa tồn tại."""
+    """Seed roles, permissions, admin và ranger users nếu chưa tồn tại."""
     db = SessionLocal()
     try:
         # Seed roles
@@ -54,6 +79,25 @@ def seed_default_data() -> None:
             print("✅ Admin user created: admin / Admin@123")
         else:
             print("ℹ️  Admin user already exists")
+
+        # Seed ranger users
+        ranger_role = db.query(Role).filter(Role.name == "ranger").first()
+        for username, email, password in _DEFAULT_RANGERS:
+            if not db.query(User).filter(User.username == username).first():
+                user = User(
+                    username=username,
+                    email=email,
+                    hashed_password=hash_password(password),
+                    is_active=True,
+                )
+                db.add(user)
+                db.flush()
+                if ranger_role:
+                    user.roles.append(ranger_role)
+                db.commit()
+                print(f"✅ Ranger created: {username} / {password}")
+            else:
+                print(f"ℹ️  Ranger '{username}' already exists")
 
     except Exception as exc:
         db.rollback()

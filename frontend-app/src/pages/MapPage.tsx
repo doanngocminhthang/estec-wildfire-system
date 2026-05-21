@@ -2,6 +2,9 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+interface Bookmark { id: string; name: string; center: [number, number]; zoom: number }
+
 // ── Basemaps ──────────────────────────────────────────────────────────────────
 const BASEMAPS = [
   { id: 'dark',    label: 'Tối',    style: 'https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json' },
@@ -14,17 +17,37 @@ const LAYER_DEFS = [
   { id: 'province-fill',   label: 'Vùng tỉnh Thanh Hóa', color: '#3b82f6', icon: 'map' },
   { id: 'province-line',   label: 'Ranh giới tỉnh',       color: '#1d4ed8', icon: 'straighten' },
   { id: 'districts-line',  label: 'Ranh giới huyện',      color: '#60a5fa', icon: 'grid_on' },
-  { id: 'hotspots-heat',   label: 'Nhiệt độ điểm cháy',   color: '#ef4444', icon: 'whatshot' },
+  { id: 'hotspots-heat',   label: 'Bản đồ nguy cơ cháy',  color: '#ef4444', icon: 'whatshot' },
   { id: 'hotspots-points', label: 'Vị trí điểm cháy',     color: '#fbbf24', icon: 'crisis_alert' },
   { id: 'incidents',       label: 'Sự cố cháy rừng',      color: '#60a5fa', icon: 'local_fire_department' },
 ] as const
 
 type LayerId = typeof LAYER_DEFS[number]['id']
 type Visibility = Record<LayerId, boolean>
+type ActiveTool = 'goto' | 'measure' | 'bookmark' | 'heatmap' | null
 
 const DEFAULT_VIS: Visibility = {
   'province-fill': true, 'province-line': true, 'districts-line': true,
   'hotspots-heat': true, 'hotspots-points': true, 'incidents': true,
+}
+
+// ── Geodesic distance (haversine) ─────────────────────────────────────────────
+function haversine([lng1, lat1]: [number, number], [lng2, lat2]: [number, number]): number {
+  const R = 6371e3
+  const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180
+  const Δφ = (lat2 - lat1) * Math.PI / 180, Δλ = (lng2 - lng1) * Math.PI / 180
+  const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function totalDist(pts: [number, number][]): number {
+  let d = 0
+  for (let i = 1; i < pts.length; i++) d += haversine(pts[i - 1], pts[i])
+  return d
+}
+
+function fmtDist(m: number) {
+  return m >= 1000 ? `${(m / 1000).toFixed(2)} km` : `${Math.round(m)} m`
 }
 
 // ── Popup helpers ─────────────────────────────────────────────────────────────
@@ -52,45 +75,115 @@ function incidentHtml(p: Record<string, unknown>) {
   </div>`
 }
 
-// ── Sample data (dùng tạm, sau thay bằng API) ─────────────────────────────────
-const HOTSPOTS_DATA: GeoJSON.FeatureCollection = {
-  type: 'FeatureCollection',
-  features: [
-    { type: 'Feature', geometry: { type: 'Point', coordinates: [105.08, 19.66] }, properties: { id: 1, device_id: 'CAM-01', confidence_score: 95, detected_at: '2025-05-20T08:00:00Z' } },
-    { type: 'Feature', geometry: { type: 'Point', coordinates: [105.27, 19.97] }, properties: { id: 2, device_id: 'CAM-02', confidence_score: 82, detected_at: '2025-05-20T09:15:00Z' } },
-    { type: 'Feature', geometry: { type: 'Point', coordinates: [105.07, 20.37] }, properties: { id: 3, device_id: 'CAM-03', confidence_score: 76, detected_at: '2025-05-20T10:30:00Z' } },
-    { type: 'Feature', geometry: { type: 'Point', coordinates: [105.49, 19.89] }, properties: { id: 4, device_id: 'CAM-04', confidence_score: 91, detected_at: '2025-05-20T11:00:00Z' } },
-    { type: 'Feature', geometry: { type: 'Point', coordinates: [105.36, 20.08] }, properties: { id: 5, device_id: 'CAM-05', confidence_score: 68, detected_at: '2025-05-20T11:45:00Z' } },
-  ],
-}
+const EMPTY_FC: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] }
 
-const INCIDENTS_DATA: GeoJSON.FeatureCollection = {
-  type: 'FeatureCollection',
-  features: [
-    { type: 'Feature', geometry: { type: 'Point', coordinates: [105.08, 19.66] }, properties: { incident_code: 'INC-001', title: 'Cháy rừng Thường Xuân', status: 'uncontrolled', priority: 'critical', burn_area_acres: 45 } },
-    { type: 'Feature', geometry: { type: 'Point', coordinates: [105.27, 19.97] }, properties: { incident_code: 'INC-002', title: 'Cháy rừng Lang Chánh', status: 'containing',   priority: 'high',     burn_area_acres: 22 } },
-    { type: 'Feature', geometry: { type: 'Point', coordinates: [105.49, 19.89] }, properties: { incident_code: 'INC-003', title: 'Cháy rừng Thọ Xuân',   status: 'controlled',  priority: 'medium',   burn_area_acres: 10 } },
-  ],
-}
+// GeoJSON từ API — MapLibre fetch trực tiếp qua URL, không cần axios
+const HOTSPOTS_URL   = '/api/hotspots/geojson'
+const INCIDENTS_URL  = '/api/incidents/geojson'
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function MapPage() {
-  // containerRef đặt trực tiếp trên div có kích thước — KHÔNG dùng absolute inset-0 child
-  const containerRef = useRef<HTMLDivElement>(null)
-  const mapRef       = useRef<maplibregl.Map | null>(null)
-  const popupRef     = useRef<maplibregl.Popup | null>(null)
-  const visRef       = useRef<Visibility>(DEFAULT_VIS)
+  const containerRef  = useRef<HTMLDivElement>(null)
+  const mapRef        = useRef<maplibregl.Map | null>(null)
+  const popupRef      = useRef<maplibregl.Popup | null>(null)
+  const visRef        = useRef<Visibility>(DEFAULT_VIS)
+  const activeToolRef = useRef<ActiveTool>(null)
+  const measurePtsRef = useRef<[number, number][]>([])
+  const mMarkersRef   = useRef<maplibregl.Marker[]>([])
+  const gotoMarkerRef = useRef<maplibregl.Marker | null>(null)
 
-  const [basemap,  setBasemap]  = useState<string>('dark')
-  const [visible,  setVisible]  = useState<Visibility>(DEFAULT_VIS)
-  const [mapReady, setMapReady] = useState(false)
+  const [basemap,       setBasemap]       = useState<string>('dark')
+  const [visible,       setVisible]       = useState<Visibility>(DEFAULT_VIS)
+  const [mapReady,      setMapReady]      = useState(false)
+  const [activeTool,    setActiveTool]    = useState<ActiveTool>(null)
+  const [measurePts,    setMeasurePts]    = useState<[number, number][]>([])
+  const [gotoLat,       setGotoLat]       = useState('19.8000')
+  const [gotoLng,       setGotoLng]       = useState('105.7800')
+  const [gotoZoom,      setGotoZoom]      = useState('10')
+  const [bookmarks,     setBookmarks]     = useState<Bookmark[]>([])
+  const [bmNameInput,   setBmNameInput]   = useState('')
 
+  // Heatmap controls
+  const [hmRadius,    setHmRadius]    = useState(35)
+  const [hmIntensity, setHmIntensity] = useState(15)   // stored as ×10 for integer slider (1.5 → 15)
+  const [hmMinConf,   setHmMinConf]   = useState(0)
+
+  // Sync refs to current state
   useEffect(() => { visRef.current = visible }, [visible])
+  useEffect(() => { activeToolRef.current = activeTool }, [activeTool])
 
+  // Load bookmarks from localStorage
+  useEffect(() => {
+    try { setBookmarks(JSON.parse(localStorage.getItem('wf-bookmarks') ?? '[]')) } catch { /**/ }
+  }, [])
+
+  // Cursor style when measure tool active
+  useEffect(() => {
+    const canvas = mapRef.current?.getCanvas()
+    if (canvas) canvas.style.cursor = activeTool === 'measure' ? 'crosshair' : ''
+  }, [activeTool])
+
+  // Sync heatmap paint properties when controls change
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady || !map.getLayer('hotspots-heat')) return
+    // Override the zoom-interpolated radius with a flat value from the slider
+    map.setPaintProperty('hotspots-heat', 'heatmap-radius', hmRadius)
+    map.setPaintProperty('hotspots-heat', 'heatmap-intensity', hmIntensity / 10)
+  }, [hmRadius, hmIntensity, mapReady])
+
+  // Filter heatmap by minimum confidence score
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady || !map.getLayer('hotspots-heat')) return
+    if (hmMinConf > 0) {
+      map.setFilter('hotspots-heat', ['>=', ['get', 'confidence_score'], hmMinConf])
+      map.setFilter('hotspots-points', ['>=', ['get', 'confidence_score'], hmMinConf])
+    } else {
+      map.setFilter('hotspots-heat', null)
+      map.setFilter('hotspots-points', null)
+    }
+  }, [hmMinConf, mapReady])
+
+  // ── Clear measure ────────────────────────────────────────────────────────────
+  const clearMeasure = useCallback(() => {
+    mMarkersRef.current.forEach((m) => m.remove())
+    mMarkersRef.current = []
+    measurePtsRef.current = []
+    setMeasurePts([])
+    const map = mapRef.current
+    if (map?.getSource('measure-line')) {
+      (map.getSource('measure-line') as maplibregl.GeoJSONSource).setData(EMPTY_FC)
+    }
+  }, [])
+
+  // ── Toggle tool ──────────────────────────────────────────────────────────────
+  function toggleTool(tool: ActiveTool) {
+    if (activeTool === tool) {
+      setActiveTool(null)
+      if (tool === 'measure') clearMeasure()
+      if (tool === 'goto') { gotoMarkerRef.current?.remove(); gotoMarkerRef.current = null }
+    } else {
+      if (activeTool === 'measure') clearMeasure()
+      if (activeTool === 'goto') { gotoMarkerRef.current?.remove(); gotoMarkerRef.current = null }
+      setActiveTool(tool)
+    }
+  }
+
+  // ── Add measure layers (called after style loads) ─────────────────────────────
+  const addMeasureLayers = useCallback((map: maplibregl.Map) => {
+    if (!map.getSource('measure-line'))
+      map.addSource('measure-line', { type: 'geojson', data: EMPTY_FC })
+    if (!map.getLayer('measure-line-layer'))
+      map.addLayer({ id: 'measure-line-layer', type: 'line', source: 'measure-line',
+        paint: { 'line-color': '#f59e0b', 'line-width': 2.5, 'line-dasharray': [2, 1.5] },
+      })
+  }, [])
+
+  // ── Load data layers ─────────────────────────────────────────────────────────
   const loadDataLayers = useCallback((map: maplibregl.Map) => {
     const vis = visRef.current
 
-    // Ranh giới — file tĩnh từ /public
     if (!map.getSource('province-src'))
       map.addSource('province-src', { type: 'geojson', data: '/thanh_hoa_province.geojson' })
     if (!map.getSource('districts-src'))
@@ -118,18 +211,31 @@ export default function MapPage() {
       paint: { 'text-color': '#1d4ed8', 'text-halo-color': '#ffffff', 'text-halo-width': 1.5 },
     })
 
-    // Hotspots
     if (!map.getSource('hotspots'))
-      map.addSource('hotspots', { type: 'geojson', data: HOTSPOTS_DATA })
+      map.addSource('hotspots', { type: 'geojson', data: HOTSPOTS_URL })
     if (!map.getLayer('hotspots-heat')) map.addLayer({ id: 'hotspots-heat', type: 'heatmap', source: 'hotspots',
       layout: { visibility: vis['hotspots-heat'] ? 'visible' : 'none' },
       paint: {
-        'heatmap-weight': ['interpolate', ['linear'], ['get', 'confidence_score'], 0, 0, 100, 1],
-        'heatmap-intensity': 1.5,
-        'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
-          0, 'rgba(0,0,0,0)', 0.3, 'rgba(21,101,192,0.5)', 0.7, 'rgba(251,191,36,0.8)', 1, 'rgba(239,68,68,1)',
+        // Weight by confidence_score: low=0, medium=0.4, high=0.7, extreme=1
+        'heatmap-weight': ['interpolate', ['linear'], ['get', 'confidence_score'],
+          0, 0,   50, 0.2,   70, 0.5,   90, 0.8,   100, 1,
         ],
-        'heatmap-radius': 30, 'heatmap-opacity': 0.85,
+        // Intensity grows with zoom
+        'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 5, 0.8, 8, 1.5, 12, 2.5],
+        // Risk color ramp: transparent → xanh lá (thấp) → vàng (trung) → cam (cao) → đỏ (cực cao)
+        'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
+          0,    'rgba(0,0,0,0)',
+          0.05, 'rgba(26,152,80,0.3)',
+          0.25, 'rgba(102,189,99,0.55)',
+          0.45, 'rgba(253,174,97,0.7)',
+          0.65, 'rgba(244,109,67,0.82)',
+          0.85, 'rgba(215,48,39,0.9)',
+          1.0,  'rgba(165,15,21,1)',
+        ],
+        // Radius shrinks as user zooms in (switch to points at zoom 12+)
+        'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 5, 20, 8, 35, 11, 50, 14, 70],
+        // Fade out as points take over
+        'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.9, 13, 0.6, 15, 0.3],
       },
     })
     if (!map.getLayer('hotspots-points')) map.addLayer({ id: 'hotspots-points', type: 'circle', source: 'hotspots',
@@ -141,9 +247,8 @@ export default function MapPage() {
       },
     })
 
-    // Incidents
     if (!map.getSource('incidents-src'))
-      map.addSource('incidents-src', { type: 'geojson', data: INCIDENTS_DATA })
+      map.addSource('incidents-src', { type: 'geojson', data: INCIDENTS_URL })
     if (!map.getLayer('incidents')) map.addLayer({ id: 'incidents', type: 'circle', source: 'incidents-src',
       layout: { visibility: vis['incidents'] ? 'visible' : 'none' },
       paint: {
@@ -155,10 +260,11 @@ export default function MapPage() {
       },
     })
 
+    addMeasureLayers(map)
     setMapReady(true)
-  }, [])
+  }, [addMeasureLayers])
 
-  // Mount map một lần
+  // ── Mount map ────────────────────────────────────────────────────────────────
   useEffect(() => {
     const el = containerRef.current
     if (!el || mapRef.current) return
@@ -177,20 +283,42 @@ export default function MapPage() {
     popupRef.current = new maplibregl.Popup({ closeButton: true, maxWidth: '300px', className: 'wf-maplibre-popup' })
 
     map.on('click', 'hotspots-points', (e) => {
+      if (activeToolRef.current) return
       if (!e.features?.[0]) return
       popupRef.current!.setLngLat(e.lngLat).setHTML(hotspotHtml(e.features[0].properties as Record<string, unknown>)).addTo(map)
     })
     map.on('click', 'incidents', (e) => {
+      if (activeToolRef.current) return
       if (!e.features?.[0]) return
       popupRef.current!.setLngLat(e.lngLat).setHTML(incidentHtml(e.features[0].properties as Record<string, unknown>)).addTo(map)
     })
-    map.on('mouseenter', 'hotspots-points', () => { map.getCanvas().style.cursor = 'pointer' })
-    map.on('mouseleave', 'hotspots-points', () => { map.getCanvas().style.cursor = '' })
-    map.on('mouseenter', 'incidents',       () => { map.getCanvas().style.cursor = 'pointer' })
-    map.on('mouseleave', 'incidents',       () => { map.getCanvas().style.cursor = '' })
+
+    // Measure tool click
+    map.on('click', (e) => {
+      if (activeToolRef.current !== 'measure') return
+      const pt: [number, number] = [e.lngLat.lng, e.lngLat.lat]
+      measurePtsRef.current = [...measurePtsRef.current, pt]
+      setMeasurePts([...measurePtsRef.current])
+
+      const lineData: GeoJSON.FeatureCollection = measurePtsRef.current.length >= 2
+        ? { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'LineString', coordinates: measurePtsRef.current }, properties: {} }] }
+        : EMPTY_FC
+      if (map.getSource('measure-line'))
+        (map.getSource('measure-line') as maplibregl.GeoJSONSource).setData(lineData)
+
+      const el = document.createElement('div')
+      el.className = 'measure-marker'
+      el.style.cssText = `width:10px;height:10px;border-radius:50%;background:#f59e0b;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4)`
+      const marker = new maplibregl.Marker({ element: el }).setLngLat(pt).addTo(map)
+      mMarkersRef.current.push(marker)
+    })
+
+    map.on('mouseenter', 'hotspots-points', () => { if (!activeToolRef.current) map.getCanvas().style.cursor = 'pointer' })
+    map.on('mouseleave', 'hotspots-points', () => { if (!activeToolRef.current) map.getCanvas().style.cursor = '' })
+    map.on('mouseenter', 'incidents',       () => { if (!activeToolRef.current) map.getCanvas().style.cursor = 'pointer' })
+    map.on('mouseleave', 'incidents',       () => { if (!activeToolRef.current) map.getCanvas().style.cursor = '' })
 
     map.on('load', () => loadDataLayers(map))
-
     mapRef.current = map
     return () => { map.remove(); mapRef.current = null; setMapReady(false) }
   }, [loadDataLayers])
@@ -206,6 +334,7 @@ export default function MapPage() {
       map.setLayoutProperty('districts-label', 'visibility', visible['districts-line'] ? 'visible' : 'none')
   }, [visible, mapReady])
 
+  // ── Basemap switch ───────────────────────────────────────────────────────────
   function switchBasemap(bmId: string) {
     const map = mapRef.current
     if (!map || bmId === basemap) return
@@ -221,20 +350,55 @@ export default function MapPage() {
     setVisible((prev) => ({ ...prev, [id]: !prev[id] }))
   }
 
+  // ── Go-To action ─────────────────────────────────────────────────────────────
+  function handleGoTo() {
+    const map = mapRef.current
+    if (!map) return
+    const lat = parseFloat(gotoLat), lng = parseFloat(gotoLng), zoom = parseFloat(gotoZoom)
+    if (isNaN(lat) || isNaN(lng)) return
+    gotoMarkerRef.current?.remove()
+    gotoMarkerRef.current = new maplibregl.Marker({ color: '#1565c0' }).setLngLat([lng, lat]).addTo(map)
+    map.flyTo({ center: [lng, lat], zoom: isNaN(zoom) ? 12 : zoom, duration: 1200 })
+  }
+
+  // ── Bookmark actions ─────────────────────────────────────────────────────────
+  function saveBookmark() {
+    const map = mapRef.current
+    if (!map) return
+    const name = bmNameInput.trim() || `Địa điểm ${bookmarks.length + 1}`
+    const bm: Bookmark = {
+      id: Date.now().toString(),
+      name,
+      center: [map.getCenter().lng, map.getCenter().lat],
+      zoom: map.getZoom(),
+    }
+    const updated = [...bookmarks, bm]
+    setBookmarks(updated)
+    localStorage.setItem('wf-bookmarks', JSON.stringify(updated))
+    setBmNameInput('')
+  }
+
+  function flyToBookmark(bm: Bookmark) {
+    mapRef.current?.flyTo({ center: bm.center, zoom: bm.zoom, duration: 1000 })
+  }
+
+  function deleteBookmark(id: string) {
+    const updated = bookmarks.filter((b) => b.id !== id)
+    setBookmarks(updated)
+    localStorage.setItem('wf-bookmarks', JSON.stringify(updated))
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
-    // containerRef đặt trực tiếp trên div toàn màn hình — panels overlay bên trong
     <div ref={containerRef} style={{ width: '100%', height: 'calc(100vh - 44px)', position: 'relative' }}>
 
-      {/* ── Layer control panel ──────────────────────────────────────────────── */}
+      {/* ── Layer control panel (left) ───────────────────────────────────────── */}
       <div className="absolute top-3 left-3 z-10 w-52 bg-white/95 border border-[#e2e8f0] rounded-xl shadow-lg backdrop-blur-sm overflow-hidden">
         <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
           <span className="material-symbols-outlined text-[#1565c0] text-base">layers</span>
           <span className="text-xs font-semibold text-[#1e293b]">Lớp bản đồ</span>
         </div>
-
         <div className="p-3 space-y-3">
-          {/* Basemap */}
           <div>
             <p className="text-[10px] uppercase tracking-widest text-[#94a3b8] mb-1.5">Nền bản đồ</p>
             <div className="flex gap-1">
@@ -249,8 +413,6 @@ export default function MapPage() {
               ))}
             </div>
           </div>
-
-          {/* Layer toggles */}
           <div>
             <p className="text-[10px] uppercase tracking-widest text-[#94a3b8] mb-1">Lớp dữ liệu</p>
             <div className="space-y-0.5">
@@ -275,7 +437,6 @@ export default function MapPage() {
               })}
             </div>
           </div>
-
           {!mapReady && (
             <div className="flex items-center gap-2 text-[10px] text-[#94a3b8]">
               <div className="w-2 h-2 rounded-full bg-[#1565c0] animate-pulse" />
@@ -284,6 +445,251 @@ export default function MapPage() {
           )}
         </div>
       </div>
+
+      {/* ── Tools toolbar (top centre) ───────────────────────────────────────── */}
+      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex gap-1 bg-white/95 border border-[#e2e8f0] rounded-xl shadow-lg backdrop-blur-sm p-1">
+        {([
+          { id: 'goto',     icon: 'my_location',  label: 'Đến tọa độ' },
+          { id: 'measure',  icon: 'straighten',   label: 'Đo khoảng cách' },
+          { id: 'heatmap',  icon: 'local_fire_department', label: 'Nguy cơ cháy' },
+          { id: 'bookmark', icon: 'bookmark',     label: 'Địa điểm đã lưu' },
+        ] as const).map(({ id, icon, label }) => (
+          <button
+            key={id}
+            onClick={() => toggleTool(id)}
+            title={label}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              activeTool === id
+                ? 'bg-[#1565c0] text-white shadow-sm'
+                : 'text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-base">{icon}</span>
+            <span className="hidden sm:inline">{label}</span>
+            {id === 'bookmark' && bookmarks.length > 0 && (
+              <span className={`text-[10px] px-1 py-0.5 rounded-full leading-none ${activeTool === id ? 'bg-white/20 text-white' : 'bg-[#1565c0] text-white'}`}>
+                {bookmarks.length}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Tool panels (right side) ─────────────────────────────────────────── */}
+      {activeTool === 'goto' && (
+        <div className="absolute top-14 right-3 z-10 w-64 bg-white/95 border border-[#e2e8f0] rounded-xl shadow-lg backdrop-blur-sm overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
+            <span className="material-symbols-outlined text-[#1565c0] text-base">my_location</span>
+            <span className="text-xs font-semibold text-[#1e293b]">Đến tọa độ</span>
+          </div>
+          <div className="p-3 space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[10px] text-[#94a3b8] mb-1">Vĩ độ (Lat)</label>
+                <input value={gotoLat} onChange={(e) => setGotoLat(e.target.value)}
+                  placeholder="19.8000"
+                  className="w-full px-2 py-1.5 text-xs border border-[#e2e8f0] rounded-lg focus:outline-none focus:border-[#1565c0] text-[#1e293b] font-mono" />
+              </div>
+              <div>
+                <label className="block text-[10px] text-[#94a3b8] mb-1">Kinh độ (Lng)</label>
+                <input value={gotoLng} onChange={(e) => setGotoLng(e.target.value)}
+                  placeholder="105.7800"
+                  className="w-full px-2 py-1.5 text-xs border border-[#e2e8f0] rounded-lg focus:outline-none focus:border-[#1565c0] text-[#1e293b] font-mono" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[10px] text-[#94a3b8] mb-1">Mức zoom (1–18)</label>
+              <input value={gotoZoom} onChange={(e) => setGotoZoom(e.target.value)}
+                placeholder="12" type="number" min="1" max="18"
+                className="w-full px-2 py-1.5 text-xs border border-[#e2e8f0] rounded-lg focus:outline-none focus:border-[#1565c0] text-[#1e293b] font-mono" />
+            </div>
+            <button onClick={handleGoTo}
+              className="w-full py-1.5 text-xs font-medium text-white bg-[#1565c0] rounded-lg hover:bg-[#1251a3] flex items-center justify-center gap-1.5">
+              <span className="material-symbols-outlined text-sm">near_me</span>
+              Bay đến vị trí
+            </button>
+            <p className="text-[10px] text-[#94a3b8] text-center">Thanh Hóa: 19.8°N, 105.78°E</p>
+          </div>
+        </div>
+      )}
+
+      {activeTool === 'measure' && (
+        <div className="absolute top-14 right-3 z-10 w-64 bg-white/95 border border-[#e2e8f0] rounded-xl shadow-lg backdrop-blur-sm overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
+            <span className="material-symbols-outlined text-[#1565c0] text-base">straighten</span>
+            <span className="text-xs font-semibold text-[#1e293b]">Đo khoảng cách</span>
+          </div>
+          <div className="p-3 space-y-3">
+            <div className="p-2.5 bg-amber-50 rounded-lg border border-amber-100 text-xs text-amber-700 flex items-start gap-2">
+              <span className="material-symbols-outlined text-sm mt-0.5">info</span>
+              <span>Click trên bản đồ để thêm điểm đo. Khoảng cách tính theo đường Geodesic.</span>
+            </div>
+            {measurePts.length >= 2 ? (
+              <div className="text-center py-2">
+                <p className="text-[10px] text-[#94a3b8] mb-1">Tổng khoảng cách</p>
+                <p className="text-2xl font-bold text-[#1565c0]">{fmtDist(totalDist(measurePts))}</p>
+                <p className="text-[10px] text-[#94a3b8] mt-1">{measurePts.length} điểm</p>
+              </div>
+            ) : (
+              <p className="text-center text-xs text-[#94a3b8] py-2">
+                {measurePts.length === 0 ? 'Chưa có điểm nào' : 'Thêm ít nhất 2 điểm để tính khoảng cách'}
+              </p>
+            )}
+            {measurePts.length > 0 && (
+              <div className="max-h-28 overflow-y-auto space-y-1">
+                {measurePts.map((pt, i) => (
+                  <div key={i} className="flex items-center gap-2 text-[10px] text-[#64748b] font-mono">
+                    <span className="w-4 h-4 rounded-full bg-amber-100 text-amber-700 text-[9px] flex items-center justify-center font-semibold flex-shrink-0">{i + 1}</span>
+                    {pt[1].toFixed(5)}, {pt[0].toFixed(5)}
+                    {i > 0 && (
+                      <span className="ml-auto text-[#94a3b8]">{fmtDist(haversine(measurePts[i - 1], pt))}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {measurePts.length > 0 && (
+              <button onClick={clearMeasure}
+                className="w-full py-1.5 text-xs text-[#64748b] border border-[#e2e8f0] rounded-lg hover:bg-[#f8fafc] flex items-center justify-center gap-1.5">
+                <span className="material-symbols-outlined text-sm">delete</span>
+                Xóa đường đo
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTool === 'heatmap' && (
+        <div className="absolute top-14 right-3 z-10 w-72 bg-white/95 border border-[#e2e8f0] rounded-xl shadow-lg backdrop-blur-sm overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
+            <span className="material-symbols-outlined text-red-500 text-base">local_fire_department</span>
+            <span className="text-xs font-semibold text-[#1e293b]">Bản đồ nguy cơ cháy</span>
+          </div>
+          <div className="p-4 space-y-4">
+
+            {/* Color legend */}
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-[#94a3b8] mb-2">Mức độ nguy cơ</p>
+              <div className="rounded-lg overflow-hidden border border-[#e2e8f0]">
+                {[
+                  { label: 'Cực cao (>90%)', bg: 'bg-red-600',    text: 'text-white' },
+                  { label: 'Cao (70–90%)',   bg: 'bg-orange-500', text: 'text-white' },
+                  { label: 'Trung bình',     bg: 'bg-amber-400',  text: 'text-white' },
+                  { label: 'Thấp (<50%)',    bg: 'bg-emerald-500',text: 'text-white' },
+                ].map(({ label, bg, text }) => (
+                  <div key={label} className={`${bg} px-3 py-1.5 flex items-center gap-2`}>
+                    <div className="w-2 h-2 rounded-full bg-white/70 flex-shrink-0" />
+                    <span className={`text-[11px] font-medium ${text}`}>{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Radius slider */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-medium text-[#64748b]">Bán kính ảnh hưởng</label>
+                <span className="text-xs font-mono text-[#1565c0] font-semibold">{hmRadius} px</span>
+              </div>
+              <input type="range" min={10} max={80} value={hmRadius}
+                onChange={(e) => setHmRadius(Number(e.target.value))}
+                className="w-full accent-[#1565c0] h-1.5 cursor-pointer" />
+              <div className="flex justify-between text-[10px] text-[#94a3b8] mt-1">
+                <span>10 (chi tiết)</span><span>80 (tổng quát)</span>
+              </div>
+            </div>
+
+            {/* Intensity slider */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-medium text-[#64748b]">Cường độ màu</label>
+                <span className="text-xs font-mono text-[#1565c0] font-semibold">{(hmIntensity / 10).toFixed(1)}×</span>
+              </div>
+              <input type="range" min={5} max={40} value={hmIntensity}
+                onChange={(e) => setHmIntensity(Number(e.target.value))}
+                className="w-full accent-[#1565c0] h-1.5 cursor-pointer" />
+              <div className="flex justify-between text-[10px] text-[#94a3b8] mt-1">
+                <span>0.5 (nhạt)</span><span>4.0 (đậm)</span>
+              </div>
+            </div>
+
+            {/* Min confidence filter */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-medium text-[#64748b]">Chỉ hiện ≥ độ tin cậy</label>
+                <span className="text-xs font-mono text-[#1565c0] font-semibold">
+                  {hmMinConf === 0 ? 'Tất cả' : `${hmMinConf}%`}
+                </span>
+              </div>
+              <input type="range" min={0} max={90} step={10} value={hmMinConf}
+                onChange={(e) => setHmMinConf(Number(e.target.value))}
+                className="w-full accent-[#ef4444] h-1.5 cursor-pointer" />
+              <div className="flex justify-between text-[10px] text-[#94a3b8] mt-1">
+                <span>Tất cả</span><span>Chỉ cực cao</span>
+              </div>
+            </div>
+
+            {/* Reset */}
+            <button
+              onClick={() => { setHmRadius(35); setHmIntensity(15); setHmMinConf(0) }}
+              className="w-full py-1.5 text-xs text-[#64748b] border border-[#e2e8f0] rounded-lg hover:bg-[#f8fafc] flex items-center justify-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-sm">restart_alt</span>
+              Đặt lại mặc định
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeTool === 'bookmark' && (
+        <div className="absolute top-14 right-3 z-10 w-64 bg-white/95 border border-[#e2e8f0] rounded-xl shadow-lg backdrop-blur-sm overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
+            <span className="material-symbols-outlined text-[#1565c0] text-base">bookmark</span>
+            <span className="text-xs font-semibold text-[#1e293b]">Địa điểm đã lưu</span>
+          </div>
+          <div className="p-3 space-y-3">
+            {/* Save current view */}
+            <div className="space-y-1.5">
+              <p className="text-[10px] text-[#94a3b8]">Lưu vị trí hiện tại</p>
+              <div className="flex gap-1.5">
+                <input value={bmNameInput} onChange={(e) => setBmNameInput(e.target.value)}
+                  placeholder="Tên địa điểm..."
+                  onKeyDown={(e) => e.key === 'Enter' && saveBookmark()}
+                  className="flex-1 px-2 py-1.5 text-xs border border-[#e2e8f0] rounded-lg focus:outline-none focus:border-[#1565c0] text-[#1e293b]" />
+                <button onClick={saveBookmark}
+                  className="px-2.5 py-1.5 text-xs font-medium text-white bg-[#1565c0] rounded-lg hover:bg-[#1251a3]">
+                  <span className="material-symbols-outlined text-sm">add</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Bookmark list */}
+            <div>
+              <p className="text-[10px] text-[#94a3b8] mb-1.5">Danh sách ({bookmarks.length})</p>
+              {bookmarks.length === 0 ? (
+                <p className="text-xs text-[#94a3b8] text-center py-3">Chưa có địa điểm nào</p>
+              ) : (
+                <div className="max-h-52 overflow-y-auto space-y-1">
+                  {bookmarks.map((bm) => (
+                    <div key={bm.id} className="flex items-center gap-1.5 group p-1.5 rounded-lg hover:bg-[#f8fafc]">
+                      <button onClick={() => flyToBookmark(bm)} className="flex-1 text-left min-w-0">
+                        <p className="text-xs font-medium text-[#1e293b] truncate">{bm.name}</p>
+                        <p className="text-[10px] text-[#94a3b8] font-mono">
+                          {bm.center[1].toFixed(4)}, {bm.center[0].toFixed(4)} · z{bm.zoom.toFixed(1)}
+                        </p>
+                      </button>
+                      <button onClick={() => deleteBookmark(bm.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-[#94a3b8] hover:text-red-500 transition-all flex-shrink-0">
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Legend ───────────────────────────────────────────────────────────── */}
       <div className="absolute bottom-8 left-3 z-10 bg-white/95 border border-[#e2e8f0] rounded-xl p-3 shadow-lg backdrop-blur-sm">
@@ -297,10 +703,12 @@ export default function MapPage() {
             <div className="w-8 h-0 flex-shrink-0 border-t border-dashed border-[#60a5fa]" style={{ borderTopWidth: 1.5 }} />
             <span className="text-[10px] text-[#64748b]">Ranh giới huyện</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-2 rounded-full flex-shrink-0"
-              style={{ background: 'linear-gradient(to right, rgba(21,101,192,0.6), rgba(251,191,36,0.9), rgba(239,68,68,1))' }} />
-            <span className="text-[10px] text-[#64748b]">Mật độ nhiệt</span>
+          <div className="space-y-1">
+            <div className="w-full h-2.5 rounded-full flex-shrink-0"
+              style={{ background: 'linear-gradient(to right, rgba(26,152,80,0.5), rgba(253,174,97,0.8), rgba(244,109,67,0.9), rgba(165,15,21,1))' }} />
+            <div className="flex justify-between text-[9px] text-[#94a3b8]">
+              <span>Thấp</span><span>Trung bình</span><span>Cao</span><span>Cực cao</span>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full border border-gray-300 flex-shrink-0 bg-[#fbbf24]" />

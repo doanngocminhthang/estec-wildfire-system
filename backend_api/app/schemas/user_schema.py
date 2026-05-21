@@ -16,6 +16,9 @@ class UserResponse(BaseModel):
     username: str
     email: str
     is_active: bool
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    unit: Optional[str] = None
     roles: List[RoleResponse] = []
     created_at: datetime
 
@@ -33,3 +36,15 @@ class UserUpdate(BaseModel):
     email: Optional[str] = None
     is_active: Optional[bool] = None
     role_names: Optional[List[str]] = None
+
+
+class ProfileUpdate(BaseModel):
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    unit: Optional[str] = None
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str

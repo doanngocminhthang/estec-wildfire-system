@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 
 const links = [
@@ -82,17 +82,20 @@ export default function Sidebar() {
 
       {/* User */}
       <div className="p-2 border-t border-white/10">
-        <div className="flex items-center gap-2 px-2 py-2">
-          <span className="material-symbols-outlined text-white/40 text-xl flex-shrink-0">account_circle</span>
-          <span className="hidden lg:block text-xs text-white/50 truncate flex-1">{user?.username}</span>
+        <Link to="/profile" className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-white/10 transition-colors group">
+          <span className="material-symbols-outlined text-white/40 text-xl flex-shrink-0 group-hover:text-white/70">account_circle</span>
+          <div className="hidden lg:block min-w-0 flex-1">
+            <p className="text-xs text-white/60 truncate group-hover:text-white/80">{user?.username}</p>
+            <p className="text-[10px] text-white/30">Hồ sơ cá nhân</p>
+          </div>
           <button
-            onClick={handleLogout}
+            onClick={(e) => { e.preventDefault(); handleLogout() }}
             title="Đăng xuất"
-            className="hidden lg:flex items-center justify-center w-7 h-7 rounded hover:bg-white/10 text-white/40 hover:text-white transition-colors"
+            className="hidden lg:flex items-center justify-center w-7 h-7 rounded hover:bg-white/20 text-white/40 hover:text-white transition-colors flex-shrink-0"
           >
             <span className="material-symbols-outlined text-lg">logout</span>
           </button>
-        </div>
+        </Link>
       </div>
     </aside>
   )
