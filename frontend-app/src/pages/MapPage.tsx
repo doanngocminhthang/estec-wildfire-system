@@ -1,9 +1,19 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import * as turf from '@turf/turf'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Bookmark { id: string; name: string; center: [number, number]; zoom: number }
+
+type DrawMode = 'point' | 'line' | 'polygon' | null
+
+interface DrawnFeature {
+  id: string
+  mode: 'point' | 'line' | 'polygon'
+  coords: [number, number][]
+  label: string
+}
 
 // ── Basemaps ──────────────────────────────────────────────────────────────────
 const BASEMAPS = [
@@ -24,7 +34,7 @@ const LAYER_DEFS = [
 
 type LayerId = typeof LAYER_DEFS[number]['id']
 type Visibility = Record<LayerId, boolean>
-type ActiveTool = 'goto' | 'measure' | 'bookmark' | 'heatmap' | null
+type ActiveTool = 'goto' | 'measure' | 'bookmark' | 'heatmap' | 'draw' | null
 
 const DEFAULT_VIS: Visibility = {
   'province-fill': true, 'province-line': true, 'districts-line': true,
@@ -48,6 +58,19 @@ function totalDist(pts: [number, number][]): number {
 
 function fmtDist(m: number) {
   return m >= 1000 ? `${(m / 1000).toFixed(2)} km` : `${Math.round(m)} m`
+}
+
+function polygonArea(coords: [number, number][]): number {
+  if (coords.length < 3) return 0
+  const closed = [...coords, coords[0]]
+  const poly = turf.polygon([closed])
+  return turf.area(poly)
+}
+
+function fmtArea(sqm: number) {
+  if (sqm >= 1_000_000) return `${(sqm / 1_000_000).toFixed(2)} km²`
+  if (sqm >= 10_000)    return `${(sqm / 10_000).toFixed(2)} ha`
+  return `${Math.round(sqm)} m²`
 }
 
 // ── Popup helpers ─────────────────────────────────────────────────────────────
@@ -108,20 +131,45 @@ export default function MapPage() {
   const [hmIntensity, setHmIntensity] = useState(15)   // stored as ×10 for integer slider (1.5 → 15)
   const [hmMinConf,   setHmMinConf]   = useState(0)
 
+  // Draw tool
+  const drawModeRef         = useRef<DrawMode>(null)
+  const activeDrawRef       = useRef<[number, number][]>([])
+  const drawnFeaturesRef    = useRef<DrawnFeature[]>([])
+  const [drawMode,          setDrawMode]          = useState<DrawMode>(null)
+  const [activeDrawCoords,  setActiveDrawCoords]  = useState<[number, number][]>([])
+  const [drawnFeatures,     setDrawnFeatures]     = useState<DrawnFeature[]>([])
+
   // Sync refs to current state
   useEffect(() => { visRef.current = visible }, [visible])
   useEffect(() => { activeToolRef.current = activeTool }, [activeTool])
+  useEffect(() => { drawModeRef.current = drawMode }, [drawMode])
 
   // Load bookmarks from localStorage
   useEffect(() => {
     try { setBookmarks(JSON.parse(localStorage.getItem('wf-bookmarks') ?? '[]')) } catch { /**/ }
   }, [])
 
-  // Cursor style when measure tool active
+  // Cursor style when measure or draw tool active
   useEffect(() => {
     const canvas = mapRef.current?.getCanvas()
-    if (canvas) canvas.style.cursor = activeTool === 'measure' ? 'crosshair' : ''
-  }, [activeTool])
+    if (!canvas) return
+    if (activeTool === 'measure' || (activeTool === 'draw' && drawMode)) {
+      canvas.style.cursor = 'crosshair'
+    } else {
+      canvas.style.cursor = ''
+    }
+  }, [activeTool, drawMode])
+
+  // Disable double-click zoom while drawing line/polygon
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    if (activeTool === 'draw' && (drawMode === 'line' || drawMode === 'polygon')) {
+      map.doubleClickZoom.disable()
+    } else {
+      map.doubleClickZoom.enable()
+    }
+  }, [activeTool, drawMode])
 
   // Sync heatmap paint properties when controls change
   useEffect(() => {
@@ -178,6 +226,127 @@ export default function MapPage() {
       map.addLayer({ id: 'measure-line-layer', type: 'line', source: 'measure-line',
         paint: { 'line-color': '#f59e0b', 'line-width': 2.5, 'line-dasharray': [2, 1.5] },
       })
+  }, [])
+
+  // ── Add draw layers ────────────────────────────────────────────────────────────
+  const addDrawLayers = useCallback((map: maplibregl.Map) => {
+    const EFC = EMPTY_FC
+    // Completed features
+    if (!map.getSource('draw-done')) map.addSource('draw-done', { type: 'geojson', data: EFC })
+    if (!map.getLayer('draw-done-poly-fill'))
+      map.addLayer({ id: 'draw-done-poly-fill', type: 'fill', source: 'draw-done',
+        filter: ['==', ['geometry-type'], 'Polygon'],
+        paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.15 } })
+    if (!map.getLayer('draw-done-poly-line'))
+      map.addLayer({ id: 'draw-done-poly-line', type: 'line', source: 'draw-done',
+        filter: ['==', ['geometry-type'], 'Polygon'],
+        paint: { 'line-color': '#2563eb', 'line-width': 2 } })
+    if (!map.getLayer('draw-done-line'))
+      map.addLayer({ id: 'draw-done-line', type: 'line', source: 'draw-done',
+        filter: ['==', ['geometry-type'], 'LineString'],
+        paint: { 'line-color': '#7c3aed', 'line-width': 2.5 } })
+    if (!map.getLayer('draw-done-point'))
+      map.addLayer({ id: 'draw-done-point', type: 'circle', source: 'draw-done',
+        filter: ['==', ['geometry-type'], 'Point'],
+        paint: { 'circle-radius': 7, 'circle-color': '#16a34a', 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } })
+    // Active feature preview (during drawing)
+    if (!map.getSource('draw-active')) map.addSource('draw-active', { type: 'geojson', data: EFC })
+    if (!map.getLayer('draw-active-poly-fill'))
+      map.addLayer({ id: 'draw-active-poly-fill', type: 'fill', source: 'draw-active',
+        filter: ['==', ['geometry-type'], 'Polygon'],
+        paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.1 } })
+    if (!map.getLayer('draw-active-line'))
+      map.addLayer({ id: 'draw-active-line', type: 'line', source: 'draw-active',
+        paint: { 'line-color': '#6366f1', 'line-width': 2, 'line-dasharray': [3, 2] } })
+    if (!map.getLayer('draw-active-vertices'))
+      map.addLayer({ id: 'draw-active-vertices', type: 'circle', source: 'draw-active',
+        filter: ['==', ['geometry-type'], 'Point'],
+        paint: { 'circle-radius': 5, 'circle-color': '#fff', 'circle-stroke-width': 2, 'circle-stroke-color': '#6366f1' } })
+  }, [])
+
+  // Rebuild GeoJSON sources from refs and push to map
+  const updateDrawSources = useCallback(() => {
+    const map = mapRef.current
+    if (!map || !map.getSource('draw-done')) return
+    const done: GeoJSON.Feature[] = drawnFeaturesRef.current.map((f) => {
+      if (f.mode === 'point') return { type: 'Feature', geometry: { type: 'Point', coordinates: f.coords[0] }, properties: { id: f.id, label: f.label } }
+      if (f.mode === 'line')  return { type: 'Feature', geometry: { type: 'LineString', coordinates: f.coords }, properties: { id: f.id, label: f.label } }
+      return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[...f.coords, f.coords[0]]] }, properties: { id: f.id, label: f.label } }
+    })
+    ;(map.getSource('draw-done') as maplibregl.GeoJSONSource).setData({ type: 'FeatureCollection', features: done })
+  }, [])
+
+  const updateActivePreview = useCallback((coords: [number, number][], mode: DrawMode, mousePos?: [number, number]) => {
+    const map = mapRef.current
+    if (!map || !map.getSource('draw-active')) return
+    const preview = mousePos ? [...coords, mousePos] : coords
+    const features: GeoJSON.Feature[] = []
+    if (mode === 'polygon' && preview.length >= 2) {
+      const ring = preview.length >= 3 ? [...preview, preview[0]] : preview
+      features.push({ type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: {} })
+    }
+    if ((mode === 'line' || mode === 'polygon') && preview.length >= 2)
+      features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: preview }, properties: {} })
+    coords.forEach((c) => features.push({ type: 'Feature', geometry: { type: 'Point', coordinates: c }, properties: {} }))
+    ;(map.getSource('draw-active') as maplibregl.GeoJSONSource).setData({ type: 'FeatureCollection', features })
+  }, [])
+
+  const clearActivePreview = useCallback(() => {
+    const map = mapRef.current
+    if (map?.getSource('draw-active'))
+      (map.getSource('draw-active') as maplibregl.GeoJSONSource).setData(EMPTY_FC)
+  }, [])
+
+  // Finish current active drawing and push to completed list
+  const finishDraw = useCallback(() => {
+    const coords = activeDrawRef.current
+    const mode   = drawModeRef.current
+    if (!mode || coords.length === 0) return
+    if (mode === 'line' && coords.length < 2) { activeDrawRef.current = []; setActiveDrawCoords([]); clearActivePreview(); return }
+    if (mode === 'polygon' && coords.length < 3) { activeDrawRef.current = []; setActiveDrawCoords([]); clearActivePreview(); return }
+
+    let label = ''
+    if (mode === 'point')   label = `${coords[0][1].toFixed(5)}, ${coords[0][0].toFixed(5)}`
+    if (mode === 'line')    label = fmtDist(totalDist(coords))
+    if (mode === 'polygon') label = fmtArea(polygonArea(coords))
+
+    const feature: DrawnFeature = { id: Date.now().toString(), mode, coords, label }
+    drawnFeaturesRef.current = [...drawnFeaturesRef.current, feature]
+    setDrawnFeatures([...drawnFeaturesRef.current])
+    activeDrawRef.current = []
+    setActiveDrawCoords([])
+    clearActivePreview()
+    updateDrawSources()
+  }, [clearActivePreview, updateDrawSources])
+
+  const deleteDrawnFeature = useCallback((id: string) => {
+    drawnFeaturesRef.current = drawnFeaturesRef.current.filter((f) => f.id !== id)
+    setDrawnFeatures([...drawnFeaturesRef.current])
+    updateDrawSources()
+  }, [updateDrawSources])
+
+  const clearAllDraw = useCallback(() => {
+    drawnFeaturesRef.current = []
+    setDrawnFeatures([])
+    activeDrawRef.current = []
+    setActiveDrawCoords([])
+    clearActivePreview()
+    updateDrawSources()
+  }, [clearActivePreview, updateDrawSources])
+
+  const exportGeoJSON = useCallback(() => {
+    const fc: GeoJSON.FeatureCollection = {
+      type: 'FeatureCollection',
+      features: drawnFeaturesRef.current.map((f) => {
+        if (f.mode === 'point')   return { type: 'Feature', geometry: { type: 'Point', coordinates: f.coords[0] }, properties: { label: f.label } }
+        if (f.mode === 'line')    return { type: 'Feature', geometry: { type: 'LineString', coordinates: f.coords }, properties: { label: f.label } }
+        return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[...f.coords, f.coords[0]]] }, properties: { label: f.label } }
+      }),
+    }
+    const blob = new Blob([JSON.stringify(fc, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = 'drawn-features.geojson'; a.click()
+    URL.revokeObjectURL(url)
   }, [])
 
   // ── Load data layers ─────────────────────────────────────────────────────────
@@ -261,8 +430,9 @@ export default function MapPage() {
     })
 
     addMeasureLayers(map)
+    addDrawLayers(map)
     setMapReady(true)
-  }, [addMeasureLayers])
+  }, [addMeasureLayers, addDrawLayers])
 
   // ── Mount map ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -291,6 +461,51 @@ export default function MapPage() {
       if (activeToolRef.current) return
       if (!e.features?.[0]) return
       popupRef.current!.setLngLat(e.lngLat).setHTML(incidentHtml(e.features[0].properties as Record<string, unknown>)).addTo(map)
+    })
+
+    // Draw tool click
+    map.on('click', (e) => {
+      if (activeToolRef.current !== 'draw') return
+      const mode = drawModeRef.current
+      if (!mode) return
+      const pt: [number, number] = [e.lngLat.lng, e.lngLat.lat]
+      if (mode === 'point') {
+        activeDrawRef.current = [pt]
+        setActiveDrawCoords([pt])
+        // point completes immediately
+        const label = `${pt[1].toFixed(5)}, ${pt[0].toFixed(5)}`
+        const feature: DrawnFeature = { id: Date.now().toString(), mode: 'point', coords: [pt], label }
+        drawnFeaturesRef.current = [...drawnFeaturesRef.current, feature]
+        setDrawnFeatures([...drawnFeaturesRef.current])
+        activeDrawRef.current = []
+        setActiveDrawCoords([])
+        updateDrawSources()
+        clearActivePreview()
+      } else {
+        activeDrawRef.current = [...activeDrawRef.current, pt]
+        setActiveDrawCoords([...activeDrawRef.current])
+        updateActivePreview(activeDrawRef.current, mode)
+      }
+    })
+
+    // Draw tool double-click — finish line/polygon
+    map.on('dblclick', () => {
+      if (activeToolRef.current !== 'draw') return
+      const mode = drawModeRef.current
+      if (mode === 'line' || mode === 'polygon') {
+        // remove the extra point added by the preceding click
+        if (activeDrawRef.current.length > 0)
+          activeDrawRef.current = activeDrawRef.current.slice(0, -1)
+        finishDraw()
+      }
+    })
+
+    // Draw tool mousemove — rubber-band preview
+    map.on('mousemove', (e) => {
+      if (activeToolRef.current !== 'draw') return
+      const mode = drawModeRef.current
+      if (!mode || mode === 'point' || activeDrawRef.current.length === 0) return
+      updateActivePreview(activeDrawRef.current, mode, [e.lngLat.lng, e.lngLat.lat])
     })
 
     // Measure tool click
@@ -451,6 +666,7 @@ export default function MapPage() {
         {([
           { id: 'goto',     icon: 'my_location',  label: 'Đến tọa độ' },
           { id: 'measure',  icon: 'straighten',   label: 'Đo khoảng cách' },
+          { id: 'draw',     icon: 'draw',         label: 'Vẽ & đo đạc' },
           { id: 'heatmap',  icon: 'local_fire_department', label: 'Nguy cơ cháy' },
           { id: 'bookmark', icon: 'bookmark',     label: 'Địa điểm đã lưu' },
         ] as const).map(({ id, icon, label }) => (
@@ -469,6 +685,11 @@ export default function MapPage() {
             {id === 'bookmark' && bookmarks.length > 0 && (
               <span className={`text-[10px] px-1 py-0.5 rounded-full leading-none ${activeTool === id ? 'bg-white/20 text-white' : 'bg-[#1565c0] text-white'}`}>
                 {bookmarks.length}
+              </span>
+            )}
+            {id === 'draw' && drawnFeatures.length > 0 && (
+              <span className={`text-[10px] px-1 py-0.5 rounded-full leading-none ${activeTool === id ? 'bg-white/20 text-white' : 'bg-[#1565c0] text-white'}`}>
+                {drawnFeatures.length}
               </span>
             )}
           </button>
@@ -554,6 +775,104 @@ export default function MapPage() {
                 <span className="material-symbols-outlined text-sm">delete</span>
                 Xóa đường đo
               </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTool === 'draw' && (
+        <div className="absolute top-14 right-3 z-10 w-72 bg-white/95 border border-[#e2e8f0] rounded-xl shadow-lg backdrop-blur-sm overflow-hidden">
+          <div className="flex items-center justify-between px-3 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[#1565c0] text-base">draw</span>
+              <span className="text-xs font-semibold text-[#1e293b]">Vẽ & đo đạc</span>
+            </div>
+            {drawnFeatures.length > 0 && (
+              <button onClick={exportGeoJSON} title="Xuất GeoJSON"
+                className="flex items-center gap-1 text-[10px] text-[#1565c0] hover:underline">
+                <span className="material-symbols-outlined text-sm">download</span>GeoJSON
+              </button>
+            )}
+          </div>
+          <div className="p-3 space-y-3">
+            {/* Mode buttons */}
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-[#94a3b8] mb-1.5">Chọn công cụ vẽ</p>
+              <div className="grid grid-cols-3 gap-1">
+                {([
+                  { mode: 'point',   icon: 'location_on', label: 'Điểm' },
+                  { mode: 'line',    icon: 'polyline',    label: 'Đường' },
+                  { mode: 'polygon', icon: 'pentagon',    label: 'Vùng' },
+                ] as const).map(({ mode: m, icon, label }) => (
+                  <button key={m} onClick={() => setDrawMode(drawMode === m ? null : m)}
+                    className={`flex flex-col items-center gap-1 py-2 rounded-lg border text-xs transition-all ${
+                      drawMode === m
+                        ? 'bg-[#1565c0] border-[#1565c0] text-white'
+                        : 'border-[#e2e8f0] text-[#64748b] hover:border-[#1565c0] hover:text-[#1565c0]'
+                    }`}>
+                    <span className="material-symbols-outlined text-base">{icon}</span>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Instruction */}
+            {drawMode && (
+              <div className="p-2.5 bg-indigo-50 border border-indigo-100 rounded-lg text-xs text-indigo-700 flex items-start gap-2">
+                <span className="material-symbols-outlined text-sm mt-0.5 flex-shrink-0">info</span>
+                <span>
+                  {drawMode === 'point'   && 'Click trên bản đồ để đặt điểm.'}
+                  {drawMode === 'line'    && 'Click để thêm điểm. Double-click để hoàn thành đường.'}
+                  {drawMode === 'polygon' && 'Click để thêm điểm. Double-click để đóng vùng.'}
+                </span>
+              </div>
+            )}
+
+            {/* Active drawing progress */}
+            {activeDrawCoords.length > 0 && (
+              <div className="flex items-center justify-between text-xs text-[#64748b] bg-[#f8fafc] rounded-lg px-3 py-2">
+                <span>{activeDrawCoords.length} điểm đã chọn</span>
+                {drawMode === 'line' && activeDrawCoords.length >= 2 && (
+                  <span className="text-[#1565c0] font-medium">{fmtDist(totalDist(activeDrawCoords))}</span>
+                )}
+                {drawMode === 'polygon' && activeDrawCoords.length >= 3 && (
+                  <span className="text-[#1565c0] font-medium">{fmtArea(polygonArea(activeDrawCoords))}</span>
+                )}
+              </div>
+            )}
+
+            {/* Completed features list */}
+            {drawnFeatures.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className="text-[10px] uppercase tracking-widest text-[#94a3b8]">Đã vẽ ({drawnFeatures.length})</p>
+                  <button onClick={clearAllDraw}
+                    className="text-[10px] text-red-500 hover:underline flex items-center gap-0.5">
+                    <span className="material-symbols-outlined text-xs">delete_sweep</span>Xóa tất cả
+                  </button>
+                </div>
+                <div className="max-h-40 overflow-y-auto space-y-1">
+                  {drawnFeatures.map((f) => (
+                    <div key={f.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-[#f8fafc] group">
+                      <span className={`material-symbols-outlined text-sm flex-shrink-0 ${
+                        f.mode === 'point' ? 'text-emerald-600' : f.mode === 'line' ? 'text-purple-600' : 'text-blue-600'
+                      }`}>
+                        {f.mode === 'point' ? 'location_on' : f.mode === 'line' ? 'polyline' : 'pentagon'}
+                      </span>
+                      <span className="flex-1 text-xs text-[#1e293b] truncate">{f.label}</span>
+                      <button onClick={() => deleteDrawnFeature(f.id)}
+                        className="opacity-0 group-hover:opacity-100 text-[#94a3b8] hover:text-red-500 transition-all flex-shrink-0">
+                        <span className="material-symbols-outlined text-sm">close</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!drawMode && drawnFeatures.length === 0 && (
+              <p className="text-center text-[11px] text-[#94a3b8] py-1">Chọn công cụ bên trên để bắt đầu vẽ</p>
             )}
           </div>
         </div>
