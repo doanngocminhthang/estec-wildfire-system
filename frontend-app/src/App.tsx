@@ -11,6 +11,7 @@ import Users from './pages/Users'
 import Profile from './pages/Profile'
 import AuditLog from './pages/AuditLog'
 import Bulletins from './pages/Bulletins'
+import Search from './pages/Search'
 
 export default function App() {
   return (
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="profile"    element={<Profile />} />
           <Route path="audit-log"  element={<AuditLog />} />
           <Route path="bulletins"  element={<Bulletins />} />
+          <Route path="search"     element={<Search />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

@@ -455,6 +455,101 @@ def create_incident(payload: IncidentCreate):
         conn.close()
 
 
+@app.get("/api/search")
+def search(
+    q: Optional[str] = Query(default=None, description="Từ khóa tìm kiếm"),
+    type: Optional[str] = Query(default=None, description="hotspot | incident"),
+    date_from: Optional[datetime] = Query(default=None),
+    date_to: Optional[datetime] = Query(default=None),
+    min_confidence: Optional[float] = Query(default=None, ge=0, le=100),
+    priority: Optional[str] = Query(default=None),
+    status: Optional[str] = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+):
+    """Tìm kiếm nâng cao đa thuộc tính trên hotspot và sự cố."""
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Không thể kết nối cơ sở dữ liệu")
+
+    cursor = None
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        hotspots = []
+        incidents = []
+
+        if type != "incident":
+            where = []
+            params: list = []
+            if q:
+                where.append("device_id ILIKE %s")
+                params.append(f"%{q}%")
+            if date_from:
+                where.append("detected_at >= %s")
+                params.append(date_from)
+            if date_to:
+                where.append("detected_at <= %s")
+                params.append(date_to)
+            if min_confidence is not None:
+                where.append("confidence_score >= %s")
+                params.append(min_confidence)
+            sql = """
+                SELECT id, device_id, confidence_score, detected_at,
+                       ST_X(geom) as longitude, ST_Y(geom) as latitude,
+                       snapshot_url
+                FROM hotspots
+            """
+            if where:
+                sql += " WHERE " + " AND ".join(where)
+            sql += " ORDER BY detected_at DESC LIMIT %s"
+            params.append(limit)
+            cursor.execute(sql, tuple(params))
+            hotspots = cursor.fetchall()
+
+        if type != "hotspot":
+            where = []
+            params = []
+            if q:
+                where.append("(title ILIKE %s OR incident_code ILIKE %s OR description ILIKE %s)")
+                params.extend([f"%{q}%", f"%{q}%", f"%{q}%"])
+            if date_from:
+                where.append("created_at >= %s")
+                params.append(date_from)
+            if date_to:
+                where.append("created_at <= %s")
+                params.append(date_to)
+            if priority:
+                where.append("priority = %s")
+                params.append(priority)
+            if status:
+                where.append("status = %s")
+                params.append(status)
+            sql = """
+                SELECT id, incident_code, title, status, priority,
+                       burn_area_acres, description, source_hotspot_id,
+                       ST_X(geom) AS longitude, ST_Y(geom) AS latitude,
+                       created_at, updated_at
+                FROM incidents
+            """
+            if where:
+                sql += " WHERE " + " AND ".join(where)
+            sql += " ORDER BY updated_at DESC LIMIT %s"
+            params.append(limit)
+            cursor.execute(sql, tuple(params))
+            incidents = cursor.fetchall()
+
+        return {
+            "hotspots": hotspots,
+            "incidents": incidents,
+            "total": len(hotspots) + len(incidents),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        conn.close()
+
+
 @app.patch("/api/incidents/{incident_id}/status", response_model=Incident)
 def update_incident_status(incident_id: int, payload: IncidentStatusUpdate):
     """Cập nhật trạng thái xử lý sự cố."""

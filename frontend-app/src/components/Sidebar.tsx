@@ -8,6 +8,7 @@ const links = [
   { to: '/hotspots',  icon: 'crisis_alert',          label: 'Điểm cháy' },
   { to: '/analytics', icon: 'bar_chart',             label: 'Thống kê' },
   { to: '/bulletins', icon: 'campaign',              label: 'Bảng tin' },
+  { to: '/search',    icon: 'manage_search',         label: 'Tìm kiếm' },
 ]
 
 const adminLinks = [
