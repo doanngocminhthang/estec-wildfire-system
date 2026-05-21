@@ -7,6 +7,7 @@ from app.db.models import User
 from app.middleware.auth import get_current_user
 from app.schemas.token_schema import LoginRequest, LoginResponse
 from app.schemas.user_schema import ChangePasswordRequest
+from app.services.audit_service import log_action
 from app.services.auth_service import login
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
@@ -38,3 +39,4 @@ def change_password_endpoint(
         )
     current_user.hashed_password = hash_password(payload.new_password)
     db.commit()
+    log_action(db, action="change_password", user_id=current_user.id, resource=f"user:{current_user.id}")

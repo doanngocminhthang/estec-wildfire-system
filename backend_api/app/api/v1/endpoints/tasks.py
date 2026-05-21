@@ -7,6 +7,7 @@ from app.db.database import get_db_session
 from app.db.models import User
 from app.middleware.auth import get_current_user, require_role
 from app.schemas.task_schema import TaskCreate, TaskResponse, TaskStatusUpdate
+from app.services.audit_service import log_action
 from app.services.task_service import create_task, delete_task, get_tasks, update_task_status
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -19,7 +20,11 @@ def create_task_endpoint(
     current_user: User = Depends(require_role("admin")),
 ):
     """Giao nhiệm vụ xác minh cho kiểm lâm (chỉ admin)."""
-    return create_task(db, payload, assigned_by_id=current_user.id)
+    result = create_task(db, payload, assigned_by_id=current_user.id)
+    log_action(db, action="create_task", user_id=current_user.id,
+               resource=f"task:{result.id}",
+               changes={"incident_id": payload.incident_id, "assigned_to_id": payload.assigned_to_id})
+    return result
 
 
 @router.get("/", response_model=List[TaskResponse])
@@ -37,17 +42,22 @@ def update_status_endpoint(
     task_id: int,
     payload: TaskStatusUpdate,
     db: Session = Depends(get_db_session),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     """Cập nhật trạng thái nhiệm vụ (kiểm lâm cập nhật kết quả)."""
-    return update_task_status(db, task_id, payload)
+    result = update_task_status(db, task_id, payload)
+    log_action(db, action="update_task_status", user_id=current_user.id,
+               resource=f"task:{task_id}",
+               changes={"status": payload.status})
+    return result
 
 
 @router.delete("/{task_id}", status_code=204)
 def delete_task_endpoint(
     task_id: int,
     db: Session = Depends(get_db_session),
-    _: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_role("admin")),
 ):
     """Hủy nhiệm vụ (chỉ admin)."""
     delete_task(db, task_id)
+    log_action(db, action="delete_task", user_id=current_user.id, resource=f"task:{task_id}")

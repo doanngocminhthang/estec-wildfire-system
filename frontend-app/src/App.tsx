@@ -9,6 +9,7 @@ import Analytics from './pages/Analytics'
 import Hotspots from './pages/Hotspots'
 import Users from './pages/Users'
 import Profile from './pages/Profile'
+import AuditLog from './pages/AuditLog'
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="analytics"  element={<Analytics />} />
           <Route path="users"      element={<Users />} />
           <Route path="profile"    element={<Profile />} />
+          <Route path="audit-log"  element={<AuditLog />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

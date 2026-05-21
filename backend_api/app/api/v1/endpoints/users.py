@@ -7,6 +7,7 @@ from app.db.database import get_db_session
 from app.db.models import User
 from app.middleware.auth import get_current_user, require_role
 from app.schemas.user_schema import ProfileUpdate, UserCreate, UserResponse, UserUpdate
+from app.services.audit_service import log_action
 from app.services.user_service import create_user, delete_user, get_user_by_id, get_users, update_me, update_user
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -25,7 +26,10 @@ def update_me_endpoint(
     current_user: User = Depends(get_current_user),
 ):
     """Cập nhật hồ sơ cá nhân (user tự cập nhật)."""
-    return update_me(db, current_user, payload)
+    result = update_me(db, current_user, payload)
+    log_action(db, action="update_profile", user_id=current_user.id, resource=f"user:{current_user.id}",
+               changes=payload.model_dump(exclude_none=True))
+    return result
 
 
 @router.get("/", response_model=List[UserResponse])
@@ -41,10 +45,13 @@ def list_users(
 def create_user_endpoint(
     payload: UserCreate,
     db: Session = Depends(get_db_session),
-    _: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_role("admin")),
 ):
     """Tạo người dùng mới (chỉ admin)."""
-    return create_user(db, payload)
+    result = create_user(db, payload)
+    log_action(db, action="create_user", user_id=current_user.id, resource=f"user:{result.id}",
+               changes={"username": payload.username, "email": payload.email, "roles": payload.role_names})
+    return result
 
 
 @router.get("/{user_id}", response_model=UserResponse)
@@ -61,17 +68,21 @@ def update_user_endpoint(
     user_id: int,
     payload: UserUpdate,
     db: Session = Depends(get_db_session),
-    _: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_role("admin")),
 ):
     """Cập nhật thông tin người dùng (chỉ admin)."""
-    return update_user(db, user_id, payload)
+    result = update_user(db, user_id, payload)
+    log_action(db, action="update_user", user_id=current_user.id, resource=f"user:{user_id}",
+               changes=payload.model_dump(exclude_none=True))
+    return result
 
 
 @router.delete("/{user_id}", status_code=204)
 def delete_user_endpoint(
     user_id: int,
     db: Session = Depends(get_db_session),
-    _: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_role("admin")),
 ):
     """Vô hiệu hóa tài khoản người dùng (chỉ admin)."""
     delete_user(db, user_id)
+    log_action(db, action="deactivate_user", user_id=current_user.id, resource=f"user:{user_id}")

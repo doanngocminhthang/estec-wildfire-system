@@ -10,7 +10,8 @@ const links = [
 ]
 
 const adminLinks = [
-  { to: '/users', icon: 'group', label: 'Người dùng' },
+  { to: '/users',     icon: 'group',    label: 'Người dùng' },
+  { to: '/audit-log', icon: 'history',  label: 'Nhật ký' },
 ]
 
 export default function Sidebar() {
