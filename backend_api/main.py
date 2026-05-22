@@ -1,11 +1,15 @@
 import os
-from fastapi import FastAPI, HTTPException
+import json
+from pathlib import Path
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
+
+_BASE_DIR = Path(__file__).parent
 
 # Khởi tạo ứng dụng FastAPI
 app = FastAPI(
@@ -61,6 +65,37 @@ class SystemStats(BaseModel):
     extreme_count: int
     high_count: int
     low_count: int
+
+
+class Incident(BaseModel):
+    id: int
+    incident_code: str
+    title: str
+    status: str
+    priority: str
+    burn_area_acres: float
+    description: Optional[str] = None
+    source_hotspot_id: Optional[int] = None
+    longitude: Optional[float] = None
+    latitude: Optional[float] = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class IncidentCreate(BaseModel):
+    incident_code: Optional[str] = None
+    title: str
+    status: str = "uncontrolled"
+    priority: str = "medium"
+    burn_area_acres: float = 0
+    description: Optional[str] = None
+    source_hotspot_id: Optional[int] = None
+    longitude: Optional[float] = None
+    latitude: Optional[float] = None
+
+
+class IncidentStatusUpdate(BaseModel):
+    status: str
 
 # --- Routes ---
 
@@ -183,4 +218,382 @@ def get_system_stats():
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
+        conn.close()
+
+
+@app.get("/api/boundaries/province")
+def get_province_boundary():
+    """Ranh giới tỉnh Thanh Hóa (GeoJSON)."""
+    path = _BASE_DIR / "thanh_hoa_province.geojson"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Chưa có dữ liệu ranh giới tỉnh")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+@app.get("/api/boundaries/districts")
+def get_district_boundaries():
+    """Ranh giới 27 huyện/thị/thành thuộc tỉnh Thanh Hóa (GeoJSON)."""
+    path = _BASE_DIR / "thanh_hoa_districts.geojson"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Chưa có dữ liệu ranh giới huyện")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+@app.get("/api/incidents/geojson")
+def get_incidents_geojson(status: Optional[str] = Query(default=None)):
+    """Lấy sự cố có toạ độ dưới dạng GeoJSON FeatureCollection."""
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Không thể kết nối cơ sở dữ liệu")
+
+    cursor = None
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        where = "WHERE geom IS NOT NULL"
+        params: list = []
+        if status:
+            where += " AND status = %s"
+            params.append(status)
+
+        cursor.execute(
+            f"""
+            SELECT json_build_object(
+                'type', 'FeatureCollection',
+                'features', COALESCE(json_agg(
+                    json_build_object(
+                        'type', 'Feature',
+                        'geometry', ST_AsGeoJSON(geom)::json,
+                        'properties', json_build_object(
+                            'id',               id,
+                            'incident_code',    incident_code,
+                            'title',            title,
+                            'status',           status,
+                            'priority',         priority,
+                            'burn_area_acres',  burn_area_acres
+                        )
+                    )
+                ), '[]'::json)
+            ) AS geojson
+            FROM incidents
+            {where}
+            """,
+            tuple(params),
+        )
+        record = cursor.fetchone()
+        return record["geojson"] if record and record["geojson"] else {"type": "FeatureCollection", "features": []}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        conn.close()
+
+
+@app.get("/api/incidents", response_model=List[Incident])
+def get_incidents(
+    status: Optional[str] = Query(default=None, description="Lọc theo trạng thái sự cố"),
+    limit: int = Query(default=100, ge=1, le=500)
+):
+    """Lấy danh sách sự cố mới nhất để hiển thị cho trang điều phối."""
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Không thể kết nối cơ sở dữ liệu")
+
+    cursor = None
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        query = """
+            SELECT
+                id,
+                incident_code,
+                title,
+                status,
+                priority,
+                burn_area_acres,
+                description,
+                source_hotspot_id,
+                ST_X(geom) AS longitude,
+                ST_Y(geom) AS latitude,
+                created_at,
+                updated_at
+            FROM incidents
+        """
+        params = []
+
+        if status:
+            query += " WHERE status = %s"
+            params.append(status)
+
+        query += " ORDER BY updated_at DESC LIMIT %s"
+        params.append(limit)
+
+        cursor.execute(query, tuple(params))
+        return cursor.fetchall()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        conn.close()
+
+
+@app.get("/api/incidents/{incident_id}", response_model=Incident)
+def get_incident_detail(incident_id: int):
+    """Lấy chi tiết một sự cố theo ID."""
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Không thể kết nối cơ sở dữ liệu")
+
+    cursor = None
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute(
+            """
+            SELECT
+                id,
+                incident_code,
+                title,
+                status,
+                priority,
+                burn_area_acres,
+                description,
+                source_hotspot_id,
+                ST_X(geom) AS longitude,
+                ST_Y(geom) AS latitude,
+                created_at,
+                updated_at
+            FROM incidents
+            WHERE id = %s
+            """,
+            (incident_id,),
+        )
+        incident = cursor.fetchone()
+        if not incident:
+            raise HTTPException(status_code=404, detail="Không tìm thấy sự cố")
+        return incident
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        conn.close()
+
+
+@app.post("/api/incidents", response_model=Incident, status_code=201)
+def create_incident(payload: IncidentCreate):
+    """Tạo một sự cố mới từ dữ liệu điều phối hoặc từ luồng cảnh báo."""
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Không thể kết nối cơ sở dữ liệu")
+
+    cursor = None
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        incident_code = payload.incident_code or f"INC-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+
+        cursor.execute(
+            """
+            INSERT INTO incidents (
+                incident_code,
+                title,
+                status,
+                priority,
+                burn_area_acres,
+                description,
+                source_hotspot_id,
+                geom
+            )
+            VALUES (
+                %s, %s, %s, %s, %s, %s, %s,
+                CASE
+                    WHEN %s IS NULL OR %s IS NULL THEN NULL
+                    ELSE ST_SetSRID(ST_MakePoint(%s, %s), 4326)
+                END
+            )
+            RETURNING
+                id,
+                incident_code,
+                title,
+                status,
+                priority,
+                burn_area_acres,
+                description,
+                source_hotspot_id,
+                ST_X(geom) AS longitude,
+                ST_Y(geom) AS latitude,
+                created_at,
+                updated_at
+            """,
+            (
+                incident_code,
+                payload.title,
+                payload.status,
+                payload.priority,
+                payload.burn_area_acres,
+                payload.description,
+                payload.source_hotspot_id,
+                payload.longitude,
+                payload.latitude,
+                payload.longitude,
+                payload.latitude,
+            ),
+        )
+        created = cursor.fetchone()
+        conn.commit()
+        return created
+    except psycopg2.errors.UniqueViolation:
+        conn.rollback()
+        raise HTTPException(status_code=409, detail="incident_code đã tồn tại")
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        conn.close()
+
+
+@app.get("/api/search")
+def search(
+    q: Optional[str] = Query(default=None, description="Từ khóa tìm kiếm"),
+    type: Optional[str] = Query(default=None, description="hotspot | incident"),
+    date_from: Optional[datetime] = Query(default=None),
+    date_to: Optional[datetime] = Query(default=None),
+    min_confidence: Optional[float] = Query(default=None, ge=0, le=100),
+    priority: Optional[str] = Query(default=None),
+    status: Optional[str] = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+):
+    """Tìm kiếm nâng cao đa thuộc tính trên hotspot và sự cố."""
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Không thể kết nối cơ sở dữ liệu")
+
+    cursor = None
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        hotspots = []
+        incidents = []
+
+        if type != "incident":
+            where = []
+            params: list = []
+            if q:
+                where.append("device_id ILIKE %s")
+                params.append(f"%{q}%")
+            if date_from:
+                where.append("detected_at >= %s")
+                params.append(date_from)
+            if date_to:
+                where.append("detected_at <= %s")
+                params.append(date_to)
+            if min_confidence is not None:
+                where.append("confidence_score >= %s")
+                params.append(min_confidence)
+            sql = """
+                SELECT id, device_id, confidence_score, detected_at,
+                       ST_X(geom) as longitude, ST_Y(geom) as latitude,
+                       snapshot_url
+                FROM hotspots
+            """
+            if where:
+                sql += " WHERE " + " AND ".join(where)
+            sql += " ORDER BY detected_at DESC LIMIT %s"
+            params.append(limit)
+            cursor.execute(sql, tuple(params))
+            hotspots = cursor.fetchall()
+
+        if type != "hotspot":
+            where = []
+            params = []
+            if q:
+                where.append("(title ILIKE %s OR incident_code ILIKE %s OR description ILIKE %s)")
+                params.extend([f"%{q}%", f"%{q}%", f"%{q}%"])
+            if date_from:
+                where.append("created_at >= %s")
+                params.append(date_from)
+            if date_to:
+                where.append("created_at <= %s")
+                params.append(date_to)
+            if priority:
+                where.append("priority = %s")
+                params.append(priority)
+            if status:
+                where.append("status = %s")
+                params.append(status)
+            sql = """
+                SELECT id, incident_code, title, status, priority,
+                       burn_area_acres, description, source_hotspot_id,
+                       ST_X(geom) AS longitude, ST_Y(geom) AS latitude,
+                       created_at, updated_at
+                FROM incidents
+            """
+            if where:
+                sql += " WHERE " + " AND ".join(where)
+            sql += " ORDER BY updated_at DESC LIMIT %s"
+            params.append(limit)
+            cursor.execute(sql, tuple(params))
+            incidents = cursor.fetchall()
+
+        return {
+            "hotspots": hotspots,
+            "incidents": incidents,
+            "total": len(hotspots) + len(incidents),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        conn.close()
+
+
+@app.patch("/api/incidents/{incident_id}/status", response_model=Incident)
+def update_incident_status(incident_id: int, payload: IncidentStatusUpdate):
+    """Cập nhật trạng thái xử lý sự cố."""
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Không thể kết nối cơ sở dữ liệu")
+
+    cursor = None
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute(
+            """
+            UPDATE incidents
+            SET status = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+            RETURNING
+                id,
+                incident_code,
+                title,
+                status,
+                priority,
+                burn_area_acres,
+                description,
+                source_hotspot_id,
+                ST_X(geom) AS longitude,
+                ST_Y(geom) AS latitude,
+                created_at,
+                updated_at
+            """,
+            (payload.status, incident_id),
+        )
+        updated = cursor.fetchone()
+        if not updated:
+            conn.rollback()
+            raise HTTPException(status_code=404, detail="Không tìm thấy sự cố")
+
+        conn.commit()
+        return updated
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
         conn.close()

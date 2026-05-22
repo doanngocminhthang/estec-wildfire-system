@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # 1. Cơ sở dữ liệu Không gian (PostGIS)
   db:
@@ -16,6 +14,28 @@ services:
       - ./volumes/db-data:/var/lib/postgresql/data
       # Mount thư mục chứa file SQL để tự động khởi tạo bảng khi chạy lần đầu
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "wildfire_admin", "-d", "wildfire_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wildfire_net
+
+  # Redis cache
+  redis:
+    image: redis:7-alpine
+    container_name: wildfire_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./volumes/redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - wildfire_net
 
@@ -50,6 +70,11 @@ services:
       - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./volumes/mosquitto-data:/mosquitto/data
       - ./volumes/mosquitto-log:/mosquitto/log
+    healthcheck:
+      test: ["CMD", "mosquitto_pub", "-h", "localhost", "-t", "test", "-m", "test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - wildfire_net
 
@@ -68,8 +93,10 @@ services:
       - MQTT_PORT=1883
       - MQTT_TOPIC=wildfire/alerts/#
     depends_on:
-      - db
-      - mqtt
+      db:
+        condition: service_healthy
+      mqtt:
+        condition: service_healthy
     networks:
       - wildfire_net
 
@@ -86,18 +113,45 @@ services:
       - DB_NAME=wildfire_db
       - DB_USER=wildfire_admin
       - DB_PASSWORD=wildfire_password
+      - REDIS_URL=redis://redis:6379
+      - MQTT_HOST=mqtt
+      - MQTT_PORT=1883
+      - JWT_SECRET_KEY=change-me-in-production
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mqtt:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wildfire_net
+
+  nginx:
+    image: nginx:alpine
+    container_name: wildfire_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend_api
     networks:
       - wildfire_net
 
   # 6. Frontend Web Server (Nginx)
   frontend_web:
-    build: ./frontend-code
+    build: ./frontend-app
     container_name: wildfire_frontend
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "8082:80"
     depends_on:
       - backend_api
     networks:

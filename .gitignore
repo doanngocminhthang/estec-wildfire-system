@@ -15,3 +15,8 @@ dist/
 build/
 __pycache__/
 *.pyc
+
+# Không cho upload thư mục Wildfire---Web---HoanVo
+Wildfire---Web---HoanVo/
+frontend-code-template/
+
