@@ -1,0 +1,170 @@
+{
+  "nav": {
+    "dashboard":    "Tổng quan",
+    "map":          "Bản đồ",
+    "incidents":    "Sự cố",
+    "hotspots":     "Điểm cháy",
+    "analytics":    "Thống kê",
+    "bulletins":    "Bảng tin",
+    "search":       "Tìm kiếm",
+    "performance":  "Hiệu suất",
+    "faq":          "Trợ giúp",
+    "users":        "Người dùng",
+    "aor":          "Địa bàn",
+    "auditLog":     "Nhật ký",
+    "admin":        "Quản trị",
+    "profile":      "Hồ sơ cá nhân",
+    "logout":       "Đăng xuất"
+  },
+  "common": {
+    "save":         "Lưu",
+    "cancel":       "Hủy",
+    "delete":       "Xóa",
+    "edit":         "Sửa",
+    "add":          "Thêm",
+    "search":       "Tìm kiếm",
+    "filter":       "Lọc",
+    "export":       "Xuất",
+    "loading":      "Đang tải...",
+    "noData":       "Không có dữ liệu",
+    "confirm":      "Xác nhận",
+    "close":        "Đóng",
+    "refresh":      "Làm mới",
+    "total":        "Tổng",
+    "status":       "Trạng thái",
+    "priority":     "Ưu tiên",
+    "createdAt":    "Ngày tạo",
+    "updatedAt":    "Cập nhật",
+    "actions":      "Thao tác",
+    "all":          "Tất cả"
+  },
+  "status": {
+    "uncontrolled": "Chưa kiểm soát",
+    "containing":   "Đang kiểm soát",
+    "controlled":   "Đã kiểm soát",
+    "active":       "Hoạt động",
+    "inactive":     "Vô hiệu"
+  },
+  "priority": {
+    "critical":     "Khẩn cấp",
+    "high":         "Cao",
+    "medium":       "Trung bình",
+    "low":          "Thấp"
+  },
+  "auth": {
+    "login":        "Đăng nhập",
+    "logout":       "Đăng xuất",
+    "username":     "Tên đăng nhập",
+    "password":     "Mật khẩu",
+    "loginBtn":     "Đăng nhập",
+    "loginFail":    "Sai tên đăng nhập hoặc mật khẩu"
+  },
+  "dashboard": {
+    "title":          "Tổng quan hệ thống",
+    "activeIncidents":"Sự cố đang xử lý",
+    "newHotspots":    "Điểm cháy mới (24h)",
+    "rangerOnDuty":   "Kiểm lâm trực",
+    "avgResponse":    "Thời gian phản ứng TB",
+    "recentAlerts":   "Cảnh báo gần đây",
+    "quickActions":   "Thao tác nhanh",
+    "viewMap":        "Xem bản đồ",
+    "viewIncidents":  "Xem sự cố",
+    "viewHotspots":   "Xem điểm cháy",
+    "newIncident":    "Tạo sự cố mới"
+  },
+  "incidents": {
+    "title":        "Quản lý sự cố",
+    "newIncident":  "Thêm sự cố",
+    "code":         "Mã sự cố",
+    "title_col":    "Tiêu đề",
+    "location":     "Vị trí",
+    "burnArea":     "Diện tích (ha)",
+    "assignedTo":   "Phụ trách",
+    "assign":       "Giao nhiệm vụ",
+    "updateStatus": "Cập nhật trạng thái"
+  },
+  "hotspots": {
+    "title":        "Danh sách điểm cháy",
+    "deviceId":     "Thiết bị",
+    "confidence":   "Độ tin cậy",
+    "detectedAt":   "Phát hiện lúc",
+    "coordinates":  "Tọa độ",
+    "high":         "Cao",
+    "medium":       "Trung bình",
+    "low":          "Thấp"
+  },
+  "map": {
+    "layers":       "Lớp bản đồ",
+    "basemap":      "Nền bản đồ",
+    "dark":         "Tối",
+    "light":        "Sáng",
+    "geographic":   "Địa lý",
+    "dataLayers":   "Lớp dữ liệu",
+    "tools": {
+      "goto":       "Đến tọa độ",
+      "measure":    "Đo khoảng cách",
+      "draw":       "Vẽ & đo đạc",
+      "heatmap":    "Nguy cơ cháy",
+      "bookmark":   "Địa điểm đã lưu",
+      "import":     "Nhập GIS"
+    },
+    "cluster": {
+      "on":         "Đang gom cụm",
+      "off":        "Gom cụm điểm cháy"
+    }
+  },
+  "bulletins": {
+    "title":        "Bảng tin",
+    "newBulletin":  "Thêm thông báo",
+    "pin":          "Ghim",
+    "unpin":        "Bỏ ghim",
+    "pinned":       "Đã ghim"
+  },
+  "analytics": {
+    "title":        "Thống kê & Phân tích",
+    "incidentsByMonth": "Sự cố theo tháng",
+    "byStatus":     "Phân bổ trạng thái",
+    "trend":        "Xu hướng điểm cháy"
+  },
+  "users": {
+    "title":        "Quản lý người dùng",
+    "newUser":      "Thêm người dùng",
+    "role":         "Vai trò",
+    "roles": {
+      "admin":      "Quản trị viên",
+      "manager":    "Quản lý",
+      "ranger":     "Kiểm lâm"
+    }
+  },
+  "profile": {
+    "title":        "Hồ sơ cá nhân",
+    "tabInfo":      "Thông tin",
+    "tabSecurity":  "Bảo mật",
+    "tabNotify":    "Thông báo",
+    "fullName":     "Họ và tên",
+    "email":        "Email",
+    "phone":        "Số điện thoại",
+    "oldPassword":  "Mật khẩu cũ",
+    "newPassword":  "Mật khẩu mới",
+    "confirmPassword": "Xác nhận mật khẩu"
+  },
+  "faq": {
+    "title":        "Trung tâm trợ giúp",
+    "subtitle":     "Hướng dẫn sử dụng hệ thống cảnh báo cháy rừng PCCCR Thanh Hóa",
+    "searchPlaceholder": "Tìm câu hỏi...",
+    "quickLinks":   "Truy cập nhanh",
+    "categories":   "Danh mục",
+    "noResult":     "Không tìm thấy câu hỏi phù hợp",
+    "contact":      "Không tìm thấy câu trả lời?",
+    "contactDesc":  "Liên hệ quản trị viên hệ thống hoặc đội kỹ thuật ESTEC để được hỗ trợ."
+  },
+  "layout": {
+    "systemTitle": "Hệ thống Phòng cháy chữa cháy rừng tỉnh Thanh Hóa",
+    "online": "Trực tuyến"
+  },
+  "lang": {
+    "vi": "Tiếng Việt",
+    "en": "English",
+    "switch": "Chuyển ngôn ngữ"
+  }
+}

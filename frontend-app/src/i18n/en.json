@@ -1,0 +1,170 @@
+{
+  "nav": {
+    "dashboard":    "Dashboard",
+    "map":          "Map",
+    "incidents":    "Incidents",
+    "hotspots":     "Hotspots",
+    "analytics":    "Analytics",
+    "bulletins":    "Bulletins",
+    "search":       "Search",
+    "performance":  "Performance",
+    "faq":          "Help",
+    "users":        "Users",
+    "aor":          "AOR",
+    "auditLog":     "Audit Log",
+    "admin":        "Admin",
+    "profile":      "My Profile",
+    "logout":       "Log out"
+  },
+  "common": {
+    "save":         "Save",
+    "cancel":       "Cancel",
+    "delete":       "Delete",
+    "edit":         "Edit",
+    "add":          "Add",
+    "search":       "Search",
+    "filter":       "Filter",
+    "export":       "Export",
+    "loading":      "Loading...",
+    "noData":       "No data available",
+    "confirm":      "Confirm",
+    "close":        "Close",
+    "refresh":      "Refresh",
+    "total":        "Total",
+    "status":       "Status",
+    "priority":     "Priority",
+    "createdAt":    "Created",
+    "updatedAt":    "Updated",
+    "actions":      "Actions",
+    "all":          "All"
+  },
+  "status": {
+    "uncontrolled": "Uncontrolled",
+    "containing":   "Containing",
+    "controlled":   "Controlled",
+    "active":       "Active",
+    "inactive":     "Inactive"
+  },
+  "priority": {
+    "critical":     "Critical",
+    "high":         "High",
+    "medium":       "Medium",
+    "low":          "Low"
+  },
+  "auth": {
+    "login":        "Sign In",
+    "logout":       "Sign Out",
+    "username":     "Username",
+    "password":     "Password",
+    "loginBtn":     "Sign In",
+    "loginFail":    "Invalid username or password"
+  },
+  "dashboard": {
+    "title":          "System Overview",
+    "activeIncidents":"Active Incidents",
+    "newHotspots":    "New Hotspots (24h)",
+    "rangerOnDuty":   "Rangers on Duty",
+    "avgResponse":    "Avg. Response Time",
+    "recentAlerts":   "Recent Alerts",
+    "quickActions":   "Quick Actions",
+    "viewMap":        "View Map",
+    "viewIncidents":  "View Incidents",
+    "viewHotspots":   "View Hotspots",
+    "newIncident":    "New Incident"
+  },
+  "incidents": {
+    "title":        "Incident Management",
+    "newIncident":  "New Incident",
+    "code":         "Code",
+    "title_col":    "Title",
+    "location":     "Location",
+    "burnArea":     "Burn Area (ha)",
+    "assignedTo":   "Assigned To",
+    "assign":       "Assign",
+    "updateStatus": "Update Status"
+  },
+  "hotspots": {
+    "title":        "Hotspot List",
+    "deviceId":     "Device",
+    "confidence":   "Confidence",
+    "detectedAt":   "Detected At",
+    "coordinates":  "Coordinates",
+    "high":         "High",
+    "medium":       "Medium",
+    "low":          "Low"
+  },
+  "map": {
+    "layers":       "Map Layers",
+    "basemap":      "Base Map",
+    "dark":         "Dark",
+    "light":        "Light",
+    "geographic":   "Geographic",
+    "dataLayers":   "Data Layers",
+    "tools": {
+      "goto":       "Go to Coordinates",
+      "measure":    "Measure Distance",
+      "draw":       "Draw & Measure",
+      "heatmap":    "Fire Risk Heatmap",
+      "bookmark":   "Saved Places",
+      "import":     "Import GIS"
+    },
+    "cluster": {
+      "on":         "Clustering on",
+      "off":        "Cluster hotspots"
+    }
+  },
+  "bulletins": {
+    "title":        "Bulletins",
+    "newBulletin":  "New Bulletin",
+    "pin":          "Pin",
+    "unpin":        "Unpin",
+    "pinned":       "Pinned"
+  },
+  "analytics": {
+    "title":        "Statistics & Analytics",
+    "incidentsByMonth": "Incidents by Month",
+    "byStatus":     "Status Distribution",
+    "trend":        "Hotspot Trend"
+  },
+  "users": {
+    "title":        "User Management",
+    "newUser":      "New User",
+    "role":         "Role",
+    "roles": {
+      "admin":      "Administrator",
+      "manager":    "Manager",
+      "ranger":     "Ranger"
+    }
+  },
+  "profile": {
+    "title":        "My Profile",
+    "tabInfo":      "Info",
+    "tabSecurity":  "Security",
+    "tabNotify":    "Notifications",
+    "fullName":     "Full Name",
+    "email":        "Email",
+    "phone":        "Phone",
+    "oldPassword":  "Current Password",
+    "newPassword":  "New Password",
+    "confirmPassword": "Confirm Password"
+  },
+  "faq": {
+    "title":        "Help Center",
+    "subtitle":     "User guide for the PCCCR Thanh Hoa wildfire alert system",
+    "searchPlaceholder": "Search questions...",
+    "quickLinks":   "Quick Links",
+    "categories":   "Categories",
+    "noResult":     "No matching questions found",
+    "contact":      "Can't find an answer?",
+    "contactDesc":  "Contact your system administrator or the ESTEC technical team for support."
+  },
+  "layout": {
+    "systemTitle": "Thanh Hoa Forest Fire Prevention & Fighting System",
+    "online": "Online"
+  },
+  "lang": {
+    "vi": "Tiếng Việt",
+    "en": "English",
+    "switch": "Switch language"
+  }
+}
