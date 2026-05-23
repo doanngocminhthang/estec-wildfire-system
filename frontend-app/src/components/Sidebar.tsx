@@ -8,12 +8,15 @@ const links = [
   { to: '/hotspots',  icon: 'crisis_alert',          label: 'Điểm cháy' },
   { to: '/analytics', icon: 'bar_chart',             label: 'Thống kê' },
   { to: '/bulletins', icon: 'campaign',              label: 'Bảng tin' },
-  { to: '/search',    icon: 'manage_search',         label: 'Tìm kiếm' },
+  { to: '/search',      icon: 'manage_search', label: 'Tìm kiếm' },
+  { to: '/performance', icon: 'leaderboard',   label: 'Hiệu suất' },
+  { to: '/faq',         icon: 'help_center',   label: 'Trợ giúp' },
 ]
 
 const adminLinks = [
-  { to: '/users',     icon: 'group',    label: 'Người dùng' },
-  { to: '/audit-log', icon: 'history',  label: 'Nhật ký' },
+  { to: '/users',     icon: 'group',          label: 'Người dùng' },
+  { to: '/aor',       icon: 'edit_location',  label: 'Địa bàn' },
+  { to: '/audit-log', icon: 'history',        label: 'Nhật ký' },
 ]
 
 export default function Sidebar() {

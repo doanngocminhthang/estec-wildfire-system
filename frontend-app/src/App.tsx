@@ -12,6 +12,9 @@ import Profile from './pages/Profile'
 import AuditLog from './pages/AuditLog'
 import Bulletins from './pages/Bulletins'
 import Search from './pages/Search'
+import Performance from './pages/Performance'
+import AOR from './pages/AOR'
+import FAQ from './pages/FAQ'
 
 export default function App() {
   return (
@@ -36,7 +39,10 @@ export default function App() {
           <Route path="profile"    element={<Profile />} />
           <Route path="audit-log"  element={<AuditLog />} />
           <Route path="bulletins"  element={<Bulletins />} />
-          <Route path="search"     element={<Search />} />
+          <Route path="search"       element={<Search />} />
+          <Route path="performance"  element={<Performance />} />
+          <Route path="aor"          element={<AOR />} />
+          <Route path="faq"          element={<FAQ />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
