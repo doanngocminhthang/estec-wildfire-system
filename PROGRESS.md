@@ -64,7 +64,7 @@
 | 21 | Bộ lọc & sắp xếp cảnh báo | ✅ Hoàn thành | Filter trên incidents và hotspots |
 | 22 | Lưu trữ & tra cứu lịch sử | ✅ Hoàn thành | Hotspots.tsx + date filter |
 | 23 | Tìm kiếm nâng cao đa thuộc tính | ✅ Hoàn thành | `/search` — full-text + spatial |
-| 24 | Liên kết cảnh báo liên quan (clustering) | ❌ Chưa làm | Gom nhóm điểm cháy gần nhau |
+| 24 | Liên kết cảnh báo liên quan (clustering) | ✅ Hoàn thành | MapLibre cluster source — gom cụm theo maxConf, click expand, toggle on/off, legend |
 | 25 | Bảng tin / Thông báo chung | ✅ Hoàn thành | `/bulletins` — CRUD + pin |
 
 ### IV. Thống kê & Báo cáo
@@ -98,10 +98,10 @@
 |---|---|---|---|
 | Bản đồ & GIS | 8 | 5 | 3 |
 | Quản trị & Bảo mật | 6 | 3 | 3 |
-| Cảnh báo & Xử lý | 11 | 7 | 4 |
+| Cảnh báo & Xử lý | 11 | 8 | 3 |
 | Thống kê & Báo cáo | 7 | 4 | 3 |
 | AI & Viễn thám | 6 | 1 | 5 |
-| **Tổng** | **38** | **20** | **18** |
+| **Tổng** | **38** | **21** | **17** |
 
 ---
 
