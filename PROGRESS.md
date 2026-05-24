@@ -47,7 +47,7 @@
 | 9 | Quản lý người dùng & RBAC | ✅ Hoàn thành | `/users` — CRUD, role, toggle active |
 | 10 | Quản lý địa bàn phụ trách (AOR) | ✅ Hoàn thành | `/aor` — gán huyện/xã/tiểu khu cho ranger, lưu localStorage |
 | 11 | Thông tin cá nhân | ✅ Hoàn thành | `/profile` — xem, sửa, ảnh đại diện |
-| 12 | Đặt lại mật khẩu qua OTP/Email | ❌ Chưa làm | Chỉ có đổi mật khẩu khi đã đăng nhập |
+| 12 | Đặt lại mật khẩu qua OTP/Email | ✅ Hoàn thành | `/forgot-password` — 3 bước: nhập account → OTP → mật khẩu mới |
 | 13 | Cấu hình kênh thông báo | ✅ Hoàn thành | Tab "Thông báo" trong /profile — kênh, mức độ, sự kiện, lưu localStorage |
 | 14 | Audit Log — nhật ký kiểm toán | ✅ Hoàn thành | `/audit-log` — immutable log + filter |
 
@@ -97,11 +97,11 @@
 | Nhóm | Tổng | Hoàn thành | Còn lại |
 |---|---|---|---|
 | Bản đồ & GIS | 8 | 5 | 3 |
-| Quản trị & Bảo mật | 6 | 3 | 3 |
+| Quản trị & Bảo mật | 6 | 4 | 2 |
 | Cảnh báo & Xử lý | 11 | 8 | 3 |
 | Thống kê & Báo cáo | 7 | 4 | 3 |
 | AI & Viễn thám | 6 | 1 | 5 |
-| **Tổng** | **38** | **21** | **17** |
+| **Tổng** | **38** | **22** | **16** |
 
 ---
 

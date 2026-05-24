@@ -1,5 +1,5 @@
 import { useState, useRef, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 
 export default function Login() {
@@ -135,7 +135,7 @@ export default function Login() {
                   Ghi nhớ đăng nhập
                 </span>
               </label>
-              <a href="#" className="text-sm text-[#708238] hover:underline">Quên mật khẩu?</a>
+              <Link to="/forgot-password" className="text-sm text-[#708238] hover:underline">Quên mật khẩu?</Link>
             </div>
 
             {/* Lỗi */}
