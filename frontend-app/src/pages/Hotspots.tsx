@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import dataApi from '../api/dataClient'
 import { downloadCSVRaw } from '../utils/exportUtils'
 
@@ -12,12 +13,13 @@ interface Hotspot {
   detected_at: string
 }
 
-const LEVEL = (c: number) =>
-  c > 90 ? { label: 'Cực cao', cls: 'text-red-600 bg-red-50 border-red-200' }
-  : c > 70 ? { label: 'Cao',    cls: 'text-amber-600 bg-amber-50 border-amber-200' }
-  :          { label: 'Thấp',   cls: 'text-emerald-600 bg-emerald-50 border-emerald-200' }
+const LEVEL_CLS = (c: number) =>
+  c > 90 ? 'text-red-600 bg-red-50 border-red-200'
+  : c > 70 ? 'text-amber-600 bg-amber-50 border-amber-200'
+  :          'text-emerald-600 bg-emerald-50 border-emerald-200'
 
 export default function Hotspots() {
+  const { t, i18n } = useTranslation()
   const [hotspots, setHotspots] = useState<Hotspot[]>([])
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
@@ -43,17 +45,17 @@ export default function Hotspots() {
     <div className="p-6 max-w-6xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-lg font-bold text-[#1e293b]">Điểm cháy (Hotspots)</h1>
-        <p className="text-xs text-[#64748b] mt-0.5">Danh sách điểm cháy phát hiện từ cảm biến và vệ tinh</p>
+        <h1 className="text-lg font-bold text-[#1e293b]">{t('hotspots.title')}</h1>
+        <p className="text-xs text-[#64748b] mt-0.5">{t('hotspots.subtitle')}</p>
       </div>
 
       {/* Summary cards */}
       {!loading && (
         <div className="grid grid-cols-3 gap-4 mb-6">
           {[
-            { label: 'Cực cao (>90%)', count: hotspots.filter(h => h.confidence_score > 90).length,            color: 'text-red-600',     bg: 'bg-red-50',     icon: 'local_fire_department' },
-            { label: 'Cao (70–90%)',   count: hotspots.filter(h => h.confidence_score > 70 && h.confidence_score <= 90).length, color: 'text-amber-600',   bg: 'bg-amber-50',   icon: 'warning' },
-            { label: 'Thấp (<70%)',    count: hotspots.filter(h => h.confidence_score <= 70).length,            color: 'text-emerald-600', bg: 'bg-emerald-50', icon: 'info' },
+            { label: t('hotspots.extremeLabel'), count: hotspots.filter(h => h.confidence_score > 90).length,            color: 'text-red-600',     bg: 'bg-red-50',     icon: 'local_fire_department' },
+            { label: t('hotspots.highLabel'),    count: hotspots.filter(h => h.confidence_score > 70 && h.confidence_score <= 90).length, color: 'text-amber-600',   bg: 'bg-amber-50',   icon: 'warning' },
+            { label: t('hotspots.lowLabel'),     count: hotspots.filter(h => h.confidence_score <= 70).length,            color: 'text-emerald-600', bg: 'bg-emerald-50', icon: 'info' },
           ].map(({ label, count, color, bg, icon }) => (
             <div key={label} className={`${bg} border border-[#e2e8f0] rounded-xl p-4 flex items-center gap-3`}>
               <span className={`material-symbols-outlined ${color} text-2xl`}>{icon}</span>
@@ -73,7 +75,7 @@ export default function Hotspots() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm theo thiết bị..."
+            placeholder={t('hotspots.searchByDevice')}
             className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-[#e2e8f0] rounded-lg focus:outline-none focus:border-[#1565c0] text-[#1e293b]"
           />
         </div>
@@ -82,30 +84,30 @@ export default function Hotspots() {
           onChange={(e) => setLevel(e.target.value)}
           className="bg-white border border-[#e2e8f0] text-sm text-[#1e293b] rounded-lg px-3 py-2 focus:outline-none focus:border-[#1565c0]"
         >
-          <option value="">Tất cả mức độ</option>
-          <option value="extreme">Cực cao (&gt;90%)</option>
-          <option value="high">Cao (70–90%)</option>
-          <option value="low">Thấp (&lt;70%)</option>
+          <option value="">{t('hotspots.allLevels')}</option>
+          <option value="extreme">{t('hotspots.extremeLabel')}</option>
+          <option value="high">{t('hotspots.highLabel')}</option>
+          <option value="low">{t('hotspots.lowLabel')}</option>
         </select>
-        <span className="text-xs text-[#94a3b8] self-center">{filtered.length} kết quả</span>
+        <span className="text-xs text-[#94a3b8] self-center">{filtered.length} {t('common.results')}</span>
         <button
           onClick={() => downloadCSVRaw(
             `hotspots-${Date.now()}.csv`,
             ['id', 'device_id', 'latitude', 'longitude', 'confidence_score', 'detected_at'],
-            ['ID', 'Thiết bị', 'Vĩ độ', 'Kinh độ', 'Độ tin cậy (%)', 'Thời gian phát hiện'],
+            ['ID', t('hotspots.colDevice'), 'Lat', 'Lng', `${t('hotspots.colConfidence')} (%)`, t('hotspots.colDetectedAt')],
             filtered.map((h) => ({
               id: h.id,
               device_id: h.device_id,
               latitude: h.latitude,
               longitude: h.longitude,
               confidence_score: h.confidence_score,
-              detected_at: new Date(h.detected_at).toLocaleString('vi-VN'),
+              detected_at: new Date(h.detected_at).toLocaleString(i18n.language === 'en' ? 'en-US' : 'vi-VN'),
             }))
           )}
           className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[#1565c0] border border-[#1565c0] rounded-lg hover:bg-[#e8f0fe] transition-colors ml-auto"
         >
           <span className="material-symbols-outlined text-sm">download</span>
-          Xuất CSV
+          {t('common.exportCSV')}
         </button>
       </div>
 
@@ -114,7 +116,7 @@ export default function Hotspots() {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
-              {['ID', 'Thiết bị', 'Tọa độ', 'Độ tin cậy', 'Ảnh', 'Thời gian phát hiện'].map((h) => (
+              {['ID', t('hotspots.colDevice'), t('hotspots.colCoords'), t('hotspots.colConfidence'), t('hotspots.colPhoto'), t('hotspots.colDetectedAt')].map((h) => (
                 <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-[#64748b] whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -132,7 +134,9 @@ export default function Hotspots() {
               <tr><td colSpan={6} className="px-4 py-8 text-center text-[#94a3b8] text-xs">Không có dữ liệu</td></tr>
             ) : (
               filtered.map((h) => {
-                const lv = LEVEL(h.confidence_score)
+                const lvCls = LEVEL_CLS(h.confidence_score)
+                const lvLabel = h.confidence_score > 90 ? t('hotspots.extreme') : h.confidence_score > 70 ? t('hotspots.high') : t('hotspots.low')
+                const locale = i18n.language === 'en' ? 'en-US' : 'vi-VN'
                 return (
                   <tr key={h.id} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc] transition-colors">
                     <td className="px-4 py-3 font-mono text-xs text-[#94a3b8]">#{h.id}</td>
@@ -145,21 +149,21 @@ export default function Hotspots() {
                         <div className="w-16 h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden">
                           <div className="h-full rounded-full bg-[#1565c0]" style={{ width: `${h.confidence_score}%` }} />
                         </div>
-                        <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${lv.cls}`}>
-                          {h.confidence_score}%
+                        <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${lvCls}`}>
+                          {h.confidence_score}% {lvLabel}
                         </span>
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       {h.snapshot_url
                         ? <a href={h.snapshot_url} target="_blank" rel="noreferrer" className="text-xs text-[#1565c0] hover:underline flex items-center gap-1">
-                            <span className="material-symbols-outlined text-sm">image</span>Xem
+                            <span className="material-symbols-outlined text-sm">image</span>{t('hotspots.view')}
                           </a>
                         : <span className="text-xs text-[#94a3b8]">—</span>
                       }
                     </td>
                     <td className="px-4 py-3 text-xs text-[#64748b] whitespace-nowrap">
-                      {new Date(h.detected_at).toLocaleString('vi-VN')}
+                      {new Date(h.detected_at).toLocaleString(locale)}
                     </td>
                   </tr>
                 )

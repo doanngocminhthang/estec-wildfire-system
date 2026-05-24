@@ -76,8 +76,8 @@
 | 28 | Xuất dữ liệu CSV/XLSX/GeoJSON | ✅ Hoàn thành | Export button trên các trang list |
 | 29 | Dashboard hiệu suất cá nhân (KPI) | ✅ Hoàn thành | `/performance` — KPI cards, charts, leaderboard (admin) |
 | 30 | Time-lapse (video biến đổi rừng) | ❌ Chưa làm | Image sequencing |
-| 31 | Hướng dẫn sử dụng / FAQ | ❌ Chưa làm | Help page |
-| 32 | Đa ngôn ngữ (i18n) | ✅ Hoàn thành | VI/EN switch — i18next, LangSwitcher trong header, Sidebar dịch nav labels |
+| 31 | Hướng dẫn sử dụng / FAQ | ✅ Hoàn thành | `/faq` — search, categories, accordion Q&A, quick links |
+| 32 | Đa ngôn ngữ (i18n) | ✅ Hoàn thành | VI/EN switch — i18next, LangSwitcher, dịch toàn bộ pages: Login/Dashboard/Incidents/Hotspots/Analytics + Sidebar/Layout |
 
 ### V. AI & Viễn thám
 
@@ -99,19 +99,20 @@
 | Bản đồ & GIS | 8 | 5 | 3 |
 | Quản trị & Bảo mật | 6 | 4 | 2 |
 | Cảnh báo & Xử lý | 11 | 8 | 3 |
-| Thống kê & Báo cáo | 7 | 4 | 3 |
+| Thống kê & Báo cáo | 7 | 6 | 1 |
 | AI & Viễn thám | 6 | 1 | 5 |
-| **Tổng** | **38** | **22** | **16** |
+| **Tổng** | **38** | **24** | **14** |
 
 ---
 
 ## Ưu tiên tiếp theo (web app)
 
-1. **Module 29 — KPI Dashboard cá nhân**: trang riêng hiển thị SLA, nhiệm vụ, ranking kiểm lâm
-2. **Module 8 — Import GIS**: upload Shapefile/GeoJSON lên thêm layer bản đồ tạm
-3. **Module 13 — Notification Settings**: tab cấu hình trong Profile
-4. **Module 10 — AOR Management**: admin gán địa bàn cho từng kiểm lâm
-5. **Module 24 — Alert Clustering**: gom điểm cháy gần nhau thành đám cháy
+✅ Tất cả module web ưu tiên đã hoàn thành!
+
+**Còn tiềm năng mở rộng:**
+- Module 30 — Time-lapse video biến đổi rừng (phụ thuộc dữ liệu ảnh)
+- Module 38 — OpenAPI docs / webhook integration
+- Hoàn thiện i18n cho các pages còn lại: Users, Profile, AuditLog, Bulletins, Search, AOR, Performance
 
 ## Không ưu tiên (mobile/AI)
 

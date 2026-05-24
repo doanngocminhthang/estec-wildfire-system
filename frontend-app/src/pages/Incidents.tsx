@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import dataApi from '../api/dataClient'
 import api from '../api/client'
 import { downloadCSVRaw, printElement } from '../utils/exportUtils'
@@ -42,11 +43,6 @@ const STATUS_STYLE: Record<string, string> = {
   containing:   'text-amber-600 bg-amber-50 border-amber-200',
   controlled:   'text-emerald-600 bg-emerald-50 border-emerald-200',
 }
-const STATUS_LABEL: Record<string, string> = {
-  uncontrolled: 'Chưa kiểm soát',
-  containing:   'Đang kiểm soát',
-  controlled:   'Đã kiểm soát',
-}
 const PRIORITY_STYLE: Record<string, string> = {
   critical: 'text-red-600 font-semibold',
   high:     'text-amber-600 font-semibold',
@@ -59,15 +55,10 @@ const TASK_STATUS_STYLE: Record<string, string> = {
   done:        'text-emerald-600 bg-emerald-50 border-emerald-200',
   cancelled:   'text-red-400 bg-red-50 border-red-100',
 }
-const TASK_STATUS_LABEL: Record<string, string> = {
-  pending:     'Chờ xử lý',
-  in_progress: 'Đang thực hiện',
-  done:        'Hoàn thành',
-  cancelled:   'Đã hủy',
-}
 
 // ── Incident Export Menu ──────────────────────────────────────────────────────
 function IncidentExportMenu({ onCSV, onPrint }: { onCSV: () => void; onPrint: () => void }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -86,7 +77,7 @@ function IncidentExportMenu({ onCSV, onPrint }: { onCSV: () => void; onPrint: ()
         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#1565c0] border border-[#1565c0] rounded-lg hover:bg-[#e8f0fe] transition-colors"
       >
         <span className="material-symbols-outlined text-sm">download</span>
-        Xuất báo cáo
+        {t('common.exportReport')}
         <span className="material-symbols-outlined text-xs">{open ? 'expand_less' : 'expand_more'}</span>
       </button>
       {open && (
@@ -96,14 +87,14 @@ function IncidentExportMenu({ onCSV, onPrint }: { onCSV: () => void; onPrint: ()
             className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-[#1e293b] hover:bg-[#f8fafc]"
           >
             <span className="material-symbols-outlined text-sm text-emerald-600">table_view</span>
-            Xuất CSV / Excel
+            {t('common.exportCSV')}
           </button>
           <button
             onClick={() => { onPrint(); setOpen(false) }}
             className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-[#1e293b] hover:bg-[#f8fafc] border-t border-[#f1f5f9]"
           >
             <span className="material-symbols-outlined text-sm text-red-500">picture_as_pdf</span>
-            In / Xuất PDF
+            {t('common.exportPDF')}
           </button>
         </div>
       )}
@@ -118,6 +109,7 @@ function AssignModal({ incident, rangers, onClose, onAssigned }: {
   onClose: () => void
   onAssigned: (task: Task) => void
 }) {
+  const { t } = useTranslation()
   const [assignTo, setAssignTo] = useState('')
   const [deadline, setDeadline] = useState('')
   const [note,     setNote]     = useState('')
@@ -125,7 +117,7 @@ function AssignModal({ incident, rangers, onClose, onAssigned }: {
   const [error,    setError]    = useState('')
 
   async function handleSubmit() {
-    if (!assignTo) { setError('Vui lòng chọn kiểm lâm viên'); return }
+    if (!assignTo) { setError(t('incidents.pleaseSelectRanger')); return }
     setSaving(true)
     setError('')
     try {
@@ -139,7 +131,7 @@ function AssignModal({ incident, rangers, onClose, onAssigned }: {
       onAssigned(data)
       onClose()
     } catch {
-      setError('Không thể giao nhiệm vụ. Kiểm tra lại quyền hoặc kết nối.')
+      setError(t('incidents.assignError'))
     } finally {
       setSaving(false)
     }
@@ -151,7 +143,7 @@ function AssignModal({ incident, rangers, onClose, onAssigned }: {
         {/* Header */}
         <div className="px-6 py-4 border-b border-[#e2e8f0] flex items-center justify-between bg-[#f8fafc]">
           <div>
-            <h2 className="text-sm font-semibold text-[#1e293b]">Giao nhiệm vụ xác minh</h2>
+            <h2 className="text-sm font-semibold text-[#1e293b]">{t('incidents.assignTask')}</h2>
             <p className="text-xs text-[#94a3b8] mt-0.5">{incident.incident_code} — {incident.title}</p>
           </div>
           <button onClick={onClose} className="text-[#94a3b8] hover:text-[#64748b]">
@@ -163,14 +155,14 @@ function AssignModal({ incident, rangers, onClose, onAssigned }: {
         <div className="px-6 py-4 space-y-4">
           <div>
             <label className="block text-xs font-medium text-[#64748b] mb-1">
-              Kiểm lâm viên <span className="text-red-500">*</span>
+              {t('incidents.ranger')} <span className="text-red-500">*</span>
             </label>
             <select
               value={assignTo}
               onChange={(e) => setAssignTo(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-[#e2e8f0] rounded-lg focus:outline-none focus:border-[#1565c0] text-[#1e293b] bg-white"
             >
-              <option value="">-- Chọn kiểm lâm --</option>
+              <option value="">{t('incidents.selectRanger')}</option>
               {rangers.map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.username} ({r.email})
@@ -180,13 +172,13 @@ function AssignModal({ incident, rangers, onClose, onAssigned }: {
             {rangers.length === 0 && (
               <p className="text-[10px] text-amber-600 mt-1 flex items-center gap-1">
                 <span className="material-symbols-outlined text-xs">warning</span>
-                Chưa có kiểm lâm viên nào. Cần restart backend để seed dữ liệu.
+                {t('incidents.noRangersWarning')}
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#64748b] mb-1">Thời hạn hoàn thành</label>
+            <label className="block text-xs font-medium text-[#64748b] mb-1">{t('incidents.deadline')}</label>
             <input
               type="datetime-local"
               value={deadline}
@@ -196,12 +188,12 @@ function AssignModal({ incident, rangers, onClose, onAssigned }: {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#64748b] mb-1">Ghi chú nhiệm vụ</label>
+            <label className="block text-xs font-medium text-[#64748b] mb-1">{t('incidents.taskNote')}</label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={3}
-              placeholder="Mô tả nhiệm vụ, khu vực cần xác minh..."
+              placeholder={t('incidents.taskNoteHint')}
               className="w-full px-3 py-2 text-sm border border-[#e2e8f0] rounded-lg focus:outline-none focus:border-[#1565c0] text-[#1e293b] resize-none"
             />
           </div>
@@ -217,7 +209,7 @@ function AssignModal({ incident, rangers, onClose, onAssigned }: {
         {/* Footer */}
         <div className="px-6 py-4 border-t border-[#e2e8f0] flex justify-end gap-3">
           <button onClick={onClose} className="px-4 py-2 text-sm text-[#64748b] border border-[#e2e8f0] rounded-lg hover:bg-[#f8fafc]">
-            Hủy
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSubmit}
@@ -225,7 +217,7 @@ function AssignModal({ incident, rangers, onClose, onAssigned }: {
             className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-[#1565c0] rounded-lg hover:bg-[#1251a3] font-medium disabled:opacity-60"
           >
             <span className="material-symbols-outlined text-sm">assignment_ind</span>
-            {saving ? 'Đang giao...' : 'Giao nhiệm vụ'}
+            {saving ? t('incidents.assigning') : t('incidents.assignTask')}
           </button>
         </div>
       </div>
@@ -235,6 +227,7 @@ function AssignModal({ incident, rangers, onClose, onAssigned }: {
 
 // ── Task List Panel ───────────────────────────────────────────────────────────
 function TaskPanel({ incident, onClose }: { incident: Incident; onClose: () => void }) {
+  const { t, i18n } = useTranslation()
   const [tasks,   setTasks]   = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -257,7 +250,7 @@ function TaskPanel({ incident, onClose }: { incident: Incident; onClose: () => v
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
         <div className="px-6 py-4 border-b border-[#e2e8f0] flex items-center justify-between bg-[#f8fafc]">
           <div>
-            <h2 className="text-sm font-semibold text-[#1e293b]">Nhiệm vụ xác minh</h2>
+            <h2 className="text-sm font-semibold text-[#1e293b]">{t('incidents.verifyTasks')}</h2>
             <p className="text-xs text-[#94a3b8] mt-0.5">{incident.incident_code} — {incident.title}</p>
           </div>
           <button onClick={onClose} className="text-[#94a3b8] hover:text-[#64748b]">
@@ -273,58 +266,61 @@ function TaskPanel({ incident, onClose }: { incident: Incident; onClose: () => v
           ) : tasks.length === 0 ? (
             <div className="text-center py-8 text-xs text-[#94a3b8]">
               <span className="material-symbols-outlined text-3xl block mb-2 text-[#cbd5e1]">assignment</span>
-              Chưa có nhiệm vụ nào cho sự cố này
+              {t('incidents.noTasks')}
             </div>
           ) : (
             <div className="space-y-3">
-              {tasks.map((t) => (
-                <div key={t.id} className="border border-[#e2e8f0] rounded-xl p-4">
-                  <div className="flex items-start justify-between gap-3 mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${TASK_STATUS_STYLE[t.status]}`}>
-                          {TASK_STATUS_LABEL[t.status]}
-                        </span>
-                        {t.deadline && (
-                          <span className="text-[10px] text-[#94a3b8] flex items-center gap-0.5">
-                            <span className="material-symbols-outlined text-xs">schedule</span>
-                            {new Date(t.deadline).toLocaleString('vi-VN')}
+              {tasks.map((task) => {
+                const locale = i18n.language === 'en' ? 'en-US' : 'vi-VN'
+                return (
+                  <div key={task.id} className="border border-[#e2e8f0] rounded-xl p-4">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${TASK_STATUS_STYLE[task.status]}`}>
+                            {t(`incidents.taskStatus.${task.status}`, { defaultValue: task.status })}
                           </span>
+                          {task.deadline && (
+                            <span className="text-[10px] text-[#94a3b8] flex items-center gap-0.5">
+                              <span className="material-symbols-outlined text-xs">schedule</span>
+                              {new Date(task.deadline).toLocaleString(locale)}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs font-medium text-[#1e293b] mt-1.5">
+                          {t('incidents.ranger_label')}: <span className="text-[#1565c0]">{task.assigned_to?.username ?? '—'}</span>
+                        </p>
+                        {task.note && <p className="text-xs text-[#64748b] mt-1">{task.note}</p>}
+                        {task.result_note && (
+                          <p className="text-xs text-emerald-700 mt-1 bg-emerald-50 px-2 py-1 rounded">
+                            {t('incidents.taskResult')}: {task.result_note}
+                          </p>
                         )}
                       </div>
-                      <p className="text-xs font-medium text-[#1e293b] mt-1.5">
-                        Kiểm lâm: <span className="text-[#1565c0]">{t.assigned_to?.username ?? '—'}</span>
-                      </p>
-                      {t.note && <p className="text-xs text-[#64748b] mt-1">{t.note}</p>}
-                      {t.result_note && (
-                        <p className="text-xs text-emerald-700 mt-1 bg-emerald-50 px-2 py-1 rounded">
-                          Kết quả: {t.result_note}
-                        </p>
-                      )}
+                      <select
+                        value={task.status}
+                        onChange={(e) => updateStatus(task.id, e.target.value)}
+                        className="text-[10px] border border-[#e2e8f0] rounded-lg px-2 py-1 bg-white text-[#1e293b] focus:outline-none focus:border-[#1565c0] flex-shrink-0"
+                      >
+                        <option value="pending">{t('incidents.taskStatus.pending')}</option>
+                        <option value="in_progress">{t('incidents.taskStatus.in_progress')}</option>
+                        <option value="done">{t('incidents.taskStatus.done')}</option>
+                        <option value="cancelled">{t('incidents.taskStatus.cancelled')}</option>
+                      </select>
                     </div>
-                    <select
-                      value={t.status}
-                      onChange={(e) => updateStatus(t.id, e.target.value)}
-                      className="text-[10px] border border-[#e2e8f0] rounded-lg px-2 py-1 bg-white text-[#1e293b] focus:outline-none focus:border-[#1565c0] flex-shrink-0"
-                    >
-                      <option value="pending">Chờ xử lý</option>
-                      <option value="in_progress">Đang thực hiện</option>
-                      <option value="done">Hoàn thành</option>
-                      <option value="cancelled">Hủy</option>
-                    </select>
+                    <p className="text-[10px] text-[#94a3b8]">
+                      {t('incidents.assignedBy')}: {task.assigned_by?.username ?? '—'} · {new Date(task.created_at).toLocaleString(locale)}
+                    </p>
                   </div>
-                  <p className="text-[10px] text-[#94a3b8]">
-                    Giao bởi: {t.assigned_by?.username ?? '—'} · {new Date(t.created_at).toLocaleString('vi-VN')}
-                  </p>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
 
         <div className="px-6 py-3 border-t border-[#e2e8f0] bg-[#f8fafc] text-right">
           <button onClick={onClose} className="px-4 py-2 text-sm text-[#64748b] border border-[#e2e8f0] rounded-lg hover:bg-white">
-            Đóng
+            {t('common.close')}
           </button>
         </div>
       </div>
@@ -334,6 +330,7 @@ function TaskPanel({ incident, onClose }: { incident: Incident; onClose: () => v
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function Incidents() {
+  const { t, i18n } = useTranslation()
   const [incidents, setIncidents] = useState<Incident[]>([])
   const [loading,   setLoading]   = useState(true)
   const [filter,    setFilter]    = useState('')
@@ -391,21 +388,23 @@ export default function Incidents() {
     setTaskCounts((prev) => ({ ...prev, [task.incident_id]: (prev[task.incident_id] ?? 0) + 1 }))
   }
 
+  const locale = i18n.language === 'en' ? 'en-US' : 'vi-VN'
+
   function exportIncidentsCSV() {
     downloadCSVRaw(
       `su-co-chay-rung-${Date.now()}.csv`,
       ['incident_code', 'title', 'status', 'priority', 'burn_area_acres', 'latitude', 'longitude', 'created_at', 'updated_at'],
-      ['Mã sự cố', 'Tiêu đề', 'Trạng thái', 'Mức độ', 'Diện tích (ha)', 'Vĩ độ', 'Kinh độ', 'Ngày tạo', 'Cập nhật'],
+      [t('incidents.code'), t('incidents.title_col'), t('common.status'), t('common.priority'), t('incidents.burnArea'), 'Lat', 'Lng', t('common.createdAt'), t('common.updatedAt')],
       incidents.map((i) => ({
         incident_code: i.incident_code,
         title: i.title,
-        status: STATUS_LABEL[i.status] ?? i.status,
+        status: t(`status.${i.status}`, { defaultValue: i.status }),
         priority: i.priority.toUpperCase(),
         burn_area_acres: i.burn_area_acres,
         latitude: i.latitude ?? '',
         longitude: i.longitude ?? '',
-        created_at: new Date(i.created_at).toLocaleString('vi-VN'),
-        updated_at: new Date(i.updated_at).toLocaleString('vi-VN'),
+        created_at: new Date(i.created_at).toLocaleString(locale),
+        updated_at: new Date(i.updated_at).toLocaleString(locale),
       })),
     )
   }
@@ -415,8 +414,8 @@ export default function Incidents() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-lg font-bold text-[#1e293b]">Quản lý sự cố</h1>
-          <p className="text-xs text-[#64748b] mt-0.5">Theo dõi, cập nhật trạng thái và giao nhiệm vụ xác minh</p>
+          <h1 className="text-lg font-bold text-[#1e293b]">{t('incidents.title')}</h1>
+          <p className="text-xs text-[#64748b] mt-0.5">{t('incidents.subtitle')}</p>
         </div>
         <IncidentExportMenu
           onCSV={exportIncidentsCSV}
@@ -431,10 +430,10 @@ export default function Incidents() {
           onChange={(e) => setFilter(e.target.value)}
           className="bg-white border border-[#e2e8f0] text-sm text-[#1e293b] rounded-lg px-3 py-2 focus:outline-none focus:border-[#1565c0] shadow-sm"
         >
-          <option value="">Tất cả trạng thái</option>
-          <option value="uncontrolled">Chưa kiểm soát</option>
-          <option value="containing">Đang kiểm soát</option>
-          <option value="controlled">Đã kiểm soát</option>
+          <option value="">{t('incidents.allStatus')}</option>
+          <option value="uncontrolled">{t('status.uncontrolled')}</option>
+          <option value="containing">{t('status.containing')}</option>
+          <option value="controlled">{t('status.controlled')}</option>
         </select>
       </div>
 
@@ -446,7 +445,7 @@ export default function Incidents() {
           ))}
         </div>
       ) : incidents.length === 0 ? (
-        <p className="text-[#94a3b8] text-sm">Không có sự cố nào</p>
+        <p className="text-[#94a3b8] text-sm">{t('incidents.noIncidents')}</p>
       ) : (
         <div className="space-y-3">
           {incidents.map((inc) => (
@@ -456,7 +455,7 @@ export default function Incidents() {
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <span className="text-xs font-mono text-[#94a3b8]">{inc.incident_code}</span>
                   <span className={`text-xs px-2 py-0.5 rounded-full border ${STATUS_STYLE[inc.status] ?? ''}`}>
-                    {STATUS_LABEL[inc.status] ?? inc.status}
+                    {t(`status.${inc.status}`, { defaultValue: inc.status })}
                   </span>
                   <span className={`text-xs ${PRIORITY_STYLE[inc.priority] ?? ''}`}>
                     {inc.priority.toUpperCase()}
@@ -474,10 +473,10 @@ export default function Incidents() {
                 <button
                   onClick={() => setTaskFor(inc)}
                   className="relative flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#64748b] border border-[#e2e8f0] rounded-lg hover:bg-[#f8fafc] transition-colors"
-                  title="Xem nhiệm vụ"
+                  title={t('incidents.verifyTasks')}
                 >
                   <span className="material-symbols-outlined text-sm">assignment</span>
-                  <span>Nhiệm vụ</span>
+                  <span>{t('incidents.tasks')}</span>
                   {(taskCounts[inc.id] ?? 0) > 0 && (
                     <span className="ml-0.5 min-w-[16px] h-4 px-1 bg-[#1565c0] text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                       {taskCounts[inc.id]}
@@ -489,10 +488,10 @@ export default function Incidents() {
                 <button
                   onClick={() => setAssignFor(inc)}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white bg-[#1565c0] rounded-lg hover:bg-[#1251a3] transition-colors font-medium"
-                  title="Giao nhiệm vụ"
+                  title={t('incidents.assignTask')}
                 >
                   <span className="material-symbols-outlined text-sm">assignment_ind</span>
-                  Giao
+                  {t('incidents.assign')}
                 </button>
 
                 {/* Status select */}
@@ -501,9 +500,9 @@ export default function Incidents() {
                   onChange={(e) => updateStatus(inc.id, e.target.value)}
                   className="bg-white border border-[#e2e8f0] text-xs text-[#1e293b] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#1565c0]"
                 >
-                  <option value="uncontrolled">Chưa kiểm soát</option>
-                  <option value="containing">Đang kiểm soát</option>
-                  <option value="controlled">Đã kiểm soát</option>
+                  <option value="uncontrolled">{t('status.uncontrolled')}</option>
+                  <option value="containing">{t('status.containing')}</option>
+                  <option value="controlled">{t('status.controlled')}</option>
                 </select>
               </div>
             </div>
@@ -548,11 +547,11 @@ export default function Incidents() {
               <tr key={i.id}>
                 <td style={{ fontFamily: 'monospace' }}>{i.incident_code}</td>
                 <td>{i.title}</td>
-                <td>{STATUS_LABEL[i.status] ?? i.status}</td>
+                <td>{t(`status.${i.status}`, { defaultValue: i.status })}</td>
                 <td>{i.priority.toUpperCase()}</td>
                 <td>{i.burn_area_acres}</td>
                 <td>{i.latitude != null ? `${i.latitude}, ${i.longitude}` : '—'}</td>
-                <td>{new Date(i.created_at).toLocaleDateString('vi-VN')}</td>
+                <td>{new Date(i.created_at).toLocaleDateString(locale)}</td>
               </tr>
             ))}
           </tbody>
