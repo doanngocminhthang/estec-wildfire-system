@@ -21,11 +21,11 @@ const LEVEL_CLS = (c: number) =>
   : c > 70 ? 'text-amber-600 bg-amber-50 border-amber-200'
   :          'text-emerald-600 bg-emerald-50 border-emerald-200'
 
-// satellite badge: VIIRS NPP=blue, NOAA-20=violet, MODIS=amber, null(IoT)=slate
+// satellite badge — source values stored as FIRMS_* by firms_service.py
 const SOURCE_BADGE: Record<string, { label: string; cls: string }> = {
-  VIIRS_SNPP_NRT:   { label: 'VIIRS/NPP', cls: 'text-blue-700 bg-blue-50 border-blue-200' },
-  VIIRS_NOAA20_NRT: { label: 'VIIRS/N20', cls: 'text-violet-700 bg-violet-50 border-violet-200' },
-  MODIS_NRT:        { label: 'MODIS',     cls: 'text-amber-700 bg-amber-50 border-amber-200' },
+  FIRMS_VIIRS_SNPP_NRT:   { label: 'VIIRS/NPP', cls: 'text-blue-700 bg-blue-50 border-blue-200' },
+  FIRMS_VIIRS_NOAA20_NRT: { label: 'VIIRS/N20', cls: 'text-violet-700 bg-violet-50 border-violet-200' },
+  FIRMS_MODIS_NRT:        { label: 'MODIS',     cls: 'text-amber-700 bg-amber-50 border-amber-200' },
 }
 
 export default function Hotspots() {
@@ -117,9 +117,9 @@ export default function Hotspots() {
           className="bg-white border border-[#e2e8f0] text-sm text-[#1e293b] rounded-lg px-3 py-2 focus:outline-none focus:border-[#1565c0]"
         >
           <option value="">{t('hotspots.allSources')}</option>
-          <option value="VIIRS_SNPP_NRT">VIIRS / Suomi NPP</option>
-          <option value="VIIRS_NOAA20_NRT">VIIRS / NOAA-20</option>
-          <option value="MODIS_NRT">MODIS</option>
+          <option value="FIRMS_VIIRS_SNPP_NRT">VIIRS / Suomi NPP</option>
+          <option value="FIRMS_VIIRS_NOAA20_NRT">VIIRS / NOAA-20</option>
+          <option value="FIRMS_MODIS_NRT">MODIS</option>
           <option value="iot">{t('hotspots.iotLabel')} (sensor)</option>
         </select>
 
