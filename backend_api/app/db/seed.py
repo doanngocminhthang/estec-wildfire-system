@@ -211,9 +211,9 @@ def seed_default_data() -> None:
             if admin_role:
                 admin.roles.append(admin_role)
             db.commit()
-            print("✅ Admin user created: admin / Admin@123")
+            logger.info("Admin user created: admin / Admin@123")
         else:
-            print("ℹ️  Admin user already exists")
+            logger.info("Admin user already exists")
 
         # Seed ranger users
         ranger_role = db.query(Role).filter(Role.name == "ranger").first()
@@ -230,12 +230,12 @@ def seed_default_data() -> None:
                 if ranger_role:
                     user.roles.append(ranger_role)
                 db.commit()
-                print(f"✅ Ranger created: {username} / {password}")
+                logger.info("Ranger created: %s", username)
             else:
-                print(f"ℹ️  Ranger '{username}' already exists")
+                logger.info("Ranger '%s' already exists", username)
 
     except Exception as exc:
         db.rollback()
-        print(f"⚠️  Seeder error: {exc}")
+        logger.error("Seeder error: %s", exc)
     finally:
         db.close()
