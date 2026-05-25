@@ -12,8 +12,9 @@
     "timelapse":    "Time-lapse",
     "users":        "Users",
     "aor":          "AOR",
-    "auditLog":     "Audit Log",
-    "admin":        "Admin",
+    "auditLog":      "Audit Log",
+    "integrations":  "API Integration",
+    "admin":         "Admin",
     "profile":      "My Profile",
     "logout":       "Log out"
   },
@@ -264,6 +265,10 @@
     "noResult":          "No matching questions found",
     "contact":           "Can't find an answer?",
     "contactDesc":       "Contact your system administrator or the ESTEC technical team for support."
+  },
+  "integrations": {
+    "title":    "API & Webhook Integration",
+    "subtitle": "Manage API keys and webhook endpoints for external systems"
   },
   "timelapse": {
     "title":    "Forest Change Time-lapse",

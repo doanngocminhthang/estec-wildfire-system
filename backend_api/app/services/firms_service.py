@@ -13,6 +13,7 @@ API key: register free at https://firms.modaps.eosdis.nasa.gov/api/
 Set env var FIRMS_MAP_KEY=<your-key>
 """
 
+import asyncio
 import csv
 import io
 import logging
@@ -191,6 +192,15 @@ async def sync_firms(db: Session, days: int = 1) -> dict:
         "FIRMS sync complete: fetched=%d inserted=%d bbox=%s",
         total_fetched, total_inserted, settings.firms_bbox,
     )
+
+    # Fire webhooks for new hotspots (late import avoids circular dependency at load time)
+    if total_inserted > 0:
+        from app.services.webhook_service import fire_event  # noqa: PLC0415
+        asyncio.create_task(fire_event(
+            "hotspot_new",
+            {"count": total_inserted, "source": "FIRMS", "bbox": settings.firms_bbox},
+        ))
+
     return _sync_state
 
 

@@ -147,6 +147,41 @@ class Bulletin(Base):
     )
 
 
+class APIKey(Base):
+    """API key cho hệ thống bên ngoài tích hợp."""
+    __tablename__ = "api_keys"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(150), nullable=False)
+    key_hash = Column(String(64), nullable=False, unique=True)  # SHA-256 hex
+    key_prefix = Column(String(16), nullable=False)             # first chars for display
+    created_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    created_by = relationship("User", foreign_keys=[created_by_id])
+
+
+class Webhook(Base):
+    """Webhook endpoint cho push notification đến hệ thống bên ngoài."""
+    __tablename__ = "webhooks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(150), nullable=False)
+    url = Column(String(500), nullable=False)
+    events = Column(JSONB, nullable=False, server_default=expression.text("'[]'::jsonb"))
+    secret = Column(String(64), nullable=False)  # HMAC-SHA256 signing secret
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    last_triggered_at = Column(DateTime(timezone=True), nullable=True)
+    failure_count = Column(Integer, nullable=False, server_default=expression.text("0"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    created_by = relationship("User", foreign_keys=[created_by_id])
+
+
 class Task(Base):
     __tablename__ = "tasks"
 

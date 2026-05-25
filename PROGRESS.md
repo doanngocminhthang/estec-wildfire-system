@@ -10,7 +10,8 @@
 
 | Route | File | Trạng thái |
 |---|---|---|
-| `/timelapse` | `Timelapse.tsx` | ✅ Time-lapse NDVI, timeline scrubber, play/pause |
+| `/timelapse`     | `Timelapse.tsx`     | ✅ Time-lapse NDVI, timeline scrubber, play/pause |
+| `/integrations`  | `Integrations.tsx`  | ✅ API key + webhook CRUD, docs tab (admin only) |
 | `/login` | `Login.tsx` | ✅ JWT auth |
 | `/dashboard` | `Dashboard.tsx` | ✅ Stats API + incidents gần đây + quick actions |
 | `/map` | `MapPage.tsx` | ✅ 3 basemaps, 6 layers, goto/measure/draw/heatmap/bookmark, click popup |
@@ -89,7 +90,7 @@
 | 35 | AI so sánh ảnh (CNN/Transformer) | ❌ Chưa làm | Change detection model |
 | 36 | Khoanh vùng & gán độ tin cậy (AI) | ❌ Chưa làm | Auto-segmentation + human-in-the-loop |
 | 37 | Phân tích điểm nóng — Hotspot Analysis | ✅ Hoàn thành | KDE heatmap trong `/map` + bộ điều chỉnh |
-| 38 | Cung cấp API tích hợp hệ thống | ❌ Chưa làm | OpenAPI + webhook + rate limit |
+| 38 | Cung cấp API tích hợp hệ thống | ✅ Hoàn thành | `/integrations` — API key CRUD, webhook CRUD + test, HMAC-SHA256 signing, API docs tab |
 
 ---
 
@@ -102,7 +103,7 @@
 | Cảnh báo & Xử lý | 11 | 8 | 3 |
 | Thống kê & Báo cáo | 7 | 7 | 0 |
 | AI & Viễn thám | 6 | 1 | 5 |
-| **Tổng** | **38** | **25** | **13** |
+| **Tổng** | **38** | **26** | **12** |
 
 ---
 

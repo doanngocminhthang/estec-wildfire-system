@@ -21,9 +21,10 @@ export default function Sidebar() {
   ]
 
   const adminLinks = [
-    { to: '/users',     icon: 'group',          label: t('nav.users') },
-    { to: '/aor',       icon: 'edit_location',  label: t('nav.aor') },
-    { to: '/audit-log', icon: 'history',        label: t('nav.auditLog') },
+    { to: '/users',        icon: 'group',                   label: t('nav.users') },
+    { to: '/aor',          icon: 'edit_location',           label: t('nav.aor') },
+    { to: '/audit-log',    icon: 'history',                 label: t('nav.auditLog') },
+    { to: '/integrations', icon: 'hub',                     label: t('nav.integrations') },
   ]
 
   function handleLogout() {

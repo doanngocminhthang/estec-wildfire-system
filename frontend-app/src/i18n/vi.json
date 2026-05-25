@@ -12,8 +12,9 @@
     "timelapse":    "Time-lapse",
     "users":        "Người dùng",
     "aor":          "Địa bàn",
-    "auditLog":     "Nhật ký",
-    "admin":        "Quản trị",
+    "auditLog":      "Nhật ký",
+    "integrations":  "Tích hợp API",
+    "admin":         "Quản trị",
     "profile":      "Hồ sơ cá nhân",
     "logout":       "Đăng xuất"
   },
@@ -264,6 +265,10 @@
     "noResult":          "Không tìm thấy câu hỏi phù hợp",
     "contact":           "Không tìm thấy câu trả lời?",
     "contactDesc":       "Liên hệ quản trị viên hệ thống hoặc đội kỹ thuật ESTEC để được hỗ trợ."
+  },
+  "integrations": {
+    "title":    "Tích hợp API & Webhook",
+    "subtitle": "Quản lý API keys và webhook endpoints cho hệ thống bên ngoài"
   },
   "timelapse": {
     "title":    "Time-lapse Biến động Rừng",

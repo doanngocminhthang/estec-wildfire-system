@@ -17,6 +17,7 @@ import Performance from './pages/Performance'
 import AOR from './pages/AOR'
 import FAQ from './pages/FAQ'
 import Timelapse from './pages/Timelapse'
+import Integrations from './pages/Integrations'
 
 export default function App() {
   return (
@@ -46,7 +47,8 @@ export default function App() {
           <Route path="performance"  element={<Performance />} />
           <Route path="aor"          element={<AOR />} />
           <Route path="faq"          element={<FAQ />} />
-          <Route path="timelapse"    element={<Timelapse />} />
+          <Route path="timelapse"      element={<Timelapse />} />
+          <Route path="integrations"   element={<Integrations />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
