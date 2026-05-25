@@ -25,6 +25,7 @@ export default function Sidebar() {
     { to: '/aor',          icon: 'edit_location',           label: t('nav.aor') },
     { to: '/audit-log',    icon: 'history',                 label: t('nav.auditLog') },
     { to: '/integrations', icon: 'hub',                     label: t('nav.integrations') },
+    { to: '/cameras',     icon: 'videocam',                label: t('nav.cameras') },
   ]
 
   function handleLogout() {

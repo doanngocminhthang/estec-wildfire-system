@@ -182,6 +182,97 @@ class Webhook(Base):
     created_by = relationship("User", foreign_keys=[created_by_id])
 
 
+class CameraStation(Base):
+    """Trạm camera quan sát cháy rừng (tương đương bảng Tram của HoanVo)."""
+    __tablename__ = "camera_stations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    station_code = Column(String(50), unique=True, nullable=False, index=True)
+    name = Column(String(150), nullable=False)
+    province = Column(String(100), nullable=True)
+    latitude = Column(DOUBLE_PRECISION, nullable=False)
+    longitude = Column(DOUBLE_PRECISION, nullable=False)
+    # Camera optics & PTZ
+    rtsp_url = Column(String(500), nullable=True)
+    ptz_url = Column(String(500), nullable=True)
+    cam_username = Column(String(100), nullable=True)
+    cam_password = Column(String(100), nullable=True)
+    image_width = Column(Integer, nullable=False, server_default=expression.text("1920"))
+    image_height = Column(Integer, nullable=False, server_default=expression.text("1080"))
+    absolute_zoom = Column(Integer, nullable=False, server_default=expression.text("1000"))
+    # Camera geometry for coordinate calculation
+    field_of_view = Column(DOUBLE_PRECISION, nullable=True)   # horizontal FOV degrees
+    tilt_angle = Column(DOUBLE_PRECISION, nullable=True)       # center tilt (gocdung)
+    cam_height_agl = Column(DOUBLE_PRECISION, nullable=True)   # height above ground (m)
+    ground_elevation = Column(DOUBLE_PRECISION, nullable=True) # DEM elevation at station (m)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    detections = relationship("FireDetection", back_populates="station")
+
+
+class FireDetection(Base):
+    """Kết quả phát hiện cháy từ camera + AI (tương đương bảng DamChay của HoanVo)."""
+    __tablename__ = "fire_detections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    station_id = Column(Integer, ForeignKey("camera_stations.id", ondelete="SET NULL"), nullable=True, index=True)
+    station_code = Column(String(50), nullable=False, index=True)
+    detected_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    confidence = Column(DOUBLE_PRECISION, nullable=False)
+    # Detection bounding box (pixels)
+    bbox_x1 = Column(DOUBLE_PRECISION, nullable=True)
+    bbox_y1 = Column(DOUBLE_PRECISION, nullable=True)
+    bbox_x2 = Column(DOUBLE_PRECISION, nullable=True)
+    bbox_y2 = Column(DOUBLE_PRECISION, nullable=True)
+    # Camera PTZ state at detection time
+    azimuth = Column(DOUBLE_PRECISION, nullable=True)   # tenths of degree (e.g. 1800 = 180°)
+    # Calculated fire location
+    fire_longitude = Column(DOUBLE_PRECISION, nullable=True)
+    fire_latitude = Column(DOUBLE_PRECISION, nullable=True)
+    fire_elevation_m = Column(DOUBLE_PRECISION, nullable=True)
+    slope_deg = Column(DOUBLE_PRECISION, nullable=True)
+    aspect_deg = Column(DOUBLE_PRECISION, nullable=True)
+    distance_m = Column(DOUBLE_PRECISION, nullable=True)
+    # Administrative unit
+    commune = Column(String(150), nullable=True)
+    commune_code = Column(String(50), nullable=True)
+    district = Column(String(150), nullable=True)
+    district_code = Column(String(50), nullable=True)
+    province = Column(String(150), nullable=True)
+    province_code = Column(String(50), nullable=True)
+    # Snapshot & status
+    snapshot_path = Column(String(500), nullable=True)
+    status = Column(String(20), nullable=False, server_default=expression.text("'pending'"))
+    created_incident_id = Column(Integer, ForeignKey("incidents.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    station = relationship("CameraStation", back_populates="detections")
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'confirmed', 'rejected')",
+            name="fire_detections_status_check",
+        ),
+    )
+
+
+class WeatherRecord(Base):
+    """Bản ghi dữ liệu thời tiết từ trạm cảm biến."""
+    __tablename__ = "weather_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    station_code = Column(String(50), nullable=False, index=True)
+    recorded_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    temperature = Column(DOUBLE_PRECISION, nullable=True)    # °C
+    humidity = Column(DOUBLE_PRECISION, nullable=True)       # %
+    wind_speed = Column(DOUBLE_PRECISION, nullable=True)     # m/s
+    rainfall = Column(DOUBLE_PRECISION, nullable=True)       # mm
+    fire_danger_index = Column(DOUBLE_PRECISION, nullable=True)  # chỉ số P
+    danger_level = Column(Integer, nullable=True)            # cấp nguy cơ 1-5
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
 class Task(Base):
     __tablename__ = "tasks"
 

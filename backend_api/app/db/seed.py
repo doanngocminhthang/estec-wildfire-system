@@ -104,6 +104,82 @@ def migrate_schema() -> None:
         "ON hotspots USING GIST (geom) WHERE geom IS NOT NULL"
     )
 
+    # Camera station & fire detection tables
+    with engine.connect() as conn:
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS camera_stations (
+                id SERIAL PRIMARY KEY,
+                station_code VARCHAR(50) NOT NULL UNIQUE,
+                name VARCHAR(150) NOT NULL,
+                province VARCHAR(100),
+                latitude DOUBLE PRECISION NOT NULL,
+                longitude DOUBLE PRECISION NOT NULL,
+                rtsp_url VARCHAR(500),
+                ptz_url VARCHAR(500),
+                cam_username VARCHAR(100),
+                cam_password VARCHAR(100),
+                image_width INTEGER NOT NULL DEFAULT 1920,
+                image_height INTEGER NOT NULL DEFAULT 1080,
+                absolute_zoom INTEGER NOT NULL DEFAULT 1000,
+                field_of_view DOUBLE PRECISION,
+                tilt_angle DOUBLE PRECISION,
+                cam_height_agl DOUBLE PRECISION,
+                ground_elevation DOUBLE PRECISION,
+                is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS fire_detections (
+                id SERIAL PRIMARY KEY,
+                station_id INTEGER REFERENCES camera_stations(id) ON DELETE SET NULL,
+                station_code VARCHAR(50) NOT NULL,
+                detected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                confidence DOUBLE PRECISION NOT NULL,
+                bbox_x1 DOUBLE PRECISION,
+                bbox_y1 DOUBLE PRECISION,
+                bbox_x2 DOUBLE PRECISION,
+                bbox_y2 DOUBLE PRECISION,
+                azimuth DOUBLE PRECISION,
+                fire_longitude DOUBLE PRECISION,
+                fire_latitude DOUBLE PRECISION,
+                fire_elevation_m DOUBLE PRECISION,
+                slope_deg DOUBLE PRECISION,
+                aspect_deg DOUBLE PRECISION,
+                distance_m DOUBLE PRECISION,
+                commune VARCHAR(150),
+                commune_code VARCHAR(50),
+                district VARCHAR(150),
+                district_code VARCHAR(50),
+                province VARCHAR(150),
+                province_code VARCHAR(50),
+                snapshot_path VARCHAR(500),
+                status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                created_incident_id INTEGER REFERENCES incidents(id) ON DELETE SET NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                CONSTRAINT fire_detections_status_check
+                    CHECK (status IN ('pending', 'confirmed', 'rejected'))
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS weather_records (
+                id SERIAL PRIMARY KEY,
+                station_code VARCHAR(50) NOT NULL,
+                recorded_at TIMESTAMPTZ NOT NULL,
+                temperature DOUBLE PRECISION,
+                humidity DOUBLE PRECISION,
+                wind_speed DOUBLE PRECISION,
+                rainfall DOUBLE PRECISION,
+                fire_danger_index DOUBLE PRECISION,
+                danger_level INTEGER,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        """))
+        conn.commit()
+
+    _exec_ddl("CREATE INDEX IF NOT EXISTS ix_fire_detections_station ON fire_detections(station_code, detected_at DESC)")
+    _exec_ddl("CREATE INDEX IF NOT EXISTS ix_weather_records_station ON weather_records(station_code, recorded_at DESC)")
+
 
 def seed_default_data() -> None:
     """Seed roles, permissions, admin và ranger users nếu chưa tồn tại."""
