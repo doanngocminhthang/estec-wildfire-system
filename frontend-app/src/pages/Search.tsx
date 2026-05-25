@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import dataApi from '../api/dataClient'
 
 interface HotspotResult {
@@ -35,17 +36,9 @@ const STATUS_STYLE: Record<string, string> = {
   containing:   'text-amber-700 bg-amber-50 border-amber-200',
   controlled:   'text-emerald-700 bg-emerald-50 border-emerald-200',
 }
-const STATUS_LABEL: Record<string, string> = {
-  uncontrolled: 'Chưa kiểm soát',
-  containing:   'Đang kiểm soát',
-  controlled:   'Đã kiểm soát',
-}
 const PRIORITY_COLOR: Record<string, string> = {
   critical: 'text-red-600', high: 'text-amber-600',
   medium: 'text-gray-600', low: 'text-emerald-600',
-}
-const PRIORITY_LABEL: Record<string, string> = {
-  critical: 'Cực nguy hiểm', high: 'Cao', medium: 'Trung bình', low: 'Thấp',
 }
 
 function confBadge(score: number) {
@@ -62,6 +55,7 @@ function fmt(dt: string) {
 }
 
 export default function Search() {
+  const { t } = useTranslation()
   const [q, setQ] = useState('')
   const [typeFilter, setTypeFilter] = useState<'all' | 'hotspot' | 'incident'>('all')
   const [dateFrom, setDateFrom] = useState('')
@@ -95,11 +89,11 @@ export default function Search() {
       setSearched(true)
       setActiveTab('all')
     } catch {
-      setError('Tìm kiếm thất bại. Vui lòng thử lại.')
+      setError(t('search.error'))
     } finally {
       setLoading(false)
     }
-  }, [q, typeFilter, dateFrom, dateTo, minConf, priority, status])
+  }, [q, typeFilter, dateFrom, dateTo, minConf, priority, status, t])
 
   function handleReset() {
     setQ('')
@@ -124,8 +118,8 @@ export default function Search() {
     <div className="flex flex-col h-full bg-[#f0f4f8]">
       {/* Header */}
       <div className="px-6 py-4 bg-white border-b border-gray-200">
-        <h1 className="text-lg font-semibold text-gray-900">Tìm kiếm nâng cao</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Tìm kiếm đồng thời trên điểm cháy và sự cố</p>
+        <h1 className="text-lg font-semibold text-gray-900">{t('search.title')}</h1>
+        <p className="text-sm text-gray-500 mt-0.5">{t('search.subtitle')}</p>
       </div>
 
       {/* Search form */}
@@ -137,7 +131,7 @@ export default function Search() {
               <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-400 text-lg">search</span>
               <input
                 type="text"
-                placeholder="Từ khóa: tên sự cố, mã sự cố, device ID..."
+                placeholder={t('search.placeholder')}
                 value={q}
                 onChange={e => setQ(e.target.value)}
                 className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -148,9 +142,9 @@ export default function Search() {
               onChange={e => setTypeFilter(e.target.value as typeof typeFilter)}
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="all">Tất cả loại</option>
-              <option value="hotspot">Điểm cháy</option>
-              <option value="incident">Sự cố</option>
+              <option value="all">{t('search.allTypes')}</option>
+              <option value="hotspot">{t('search.typeHotspot')}</option>
+              <option value="incident">{t('search.typeIncident')}</option>
             </select>
             <button
               type="button"
@@ -162,7 +156,7 @@ export default function Search() {
               }`}
             >
               <span className="material-symbols-outlined text-base">tune</span>
-              Lọc {hasFilters && <span className="w-2 h-2 rounded-full bg-blue-500 ml-0.5" />}
+              {t('search.filterBtn')} {hasFilters && <span className="w-2 h-2 rounded-full bg-blue-500 ml-0.5" />}
             </button>
             <button
               type="submit"
@@ -173,12 +167,12 @@ export default function Search() {
                 ? <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
                 : <span className="material-symbols-outlined text-base">search</span>
               }
-              Tìm kiếm
+              {t('search.searchBtn')}
             </button>
             {searched && (
               <button type="button" onClick={handleReset}
                 className="px-3 py-2 border border-gray-300 text-gray-600 rounded-lg text-sm hover:bg-gray-50 transition-colors">
-                Xóa
+                {t('search.clearBtn')}
               </button>
             )}
           </div>
@@ -187,40 +181,40 @@ export default function Search() {
           {showFilters && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-gray-100">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Từ ngày</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('search.dateFrom')}</label>
                 <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Đến ngày</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('search.dateTo')}</label>
                 <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Độ tin cậy tối thiểu (%)</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('search.minConf')}</label>
                 <input type="number" min={0} max={100} placeholder="vd: 70"
                   value={minConf} onChange={e => setMinConf(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Mức độ ưu tiên (sự cố)</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('search.priorityFilter')}</label>
                 <select value={priority} onChange={e => setPriority(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">Tất cả</option>
-                  <option value="critical">Cực nguy hiểm</option>
-                  <option value="high">Cao</option>
-                  <option value="medium">Trung bình</option>
-                  <option value="low">Thấp</option>
+                  <option value="">{t('search.allLabel')}</option>
+                  <option value="critical">{t('search.priorityLabels.critical')}</option>
+                  <option value="high">{t('search.priorityLabels.high')}</option>
+                  <option value="medium">{t('search.priorityLabels.medium')}</option>
+                  <option value="low">{t('search.priorityLabels.low')}</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Trạng thái (sự cố)</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('search.statusFilter')}</label>
                 <select value={status} onChange={e => setStatus(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">Tất cả</option>
-                  <option value="uncontrolled">Chưa kiểm soát</option>
-                  <option value="containing">Đang kiểm soát</option>
-                  <option value="controlled">Đã kiểm soát</option>
+                  <option value="">{t('search.allLabel')}</option>
+                  <option value="uncontrolled">{t('search.statusLabels.uncontrolled')}</option>
+                  <option value="containing">{t('search.statusLabels.containing')}</option>
+                  <option value="controlled">{t('search.statusLabels.controlled')}</option>
                 </select>
               </div>
             </div>
@@ -237,7 +231,7 @@ export default function Search() {
         {!searched && !loading && (
           <div className="flex flex-col items-center justify-center h-48 text-gray-400 gap-3">
             <span className="material-symbols-outlined text-5xl">manage_search</span>
-            <p className="text-sm">Nhập từ khóa và nhấn Tìm kiếm</p>
+            <p className="text-sm">{t('search.emptyState')}</p>
           </div>
         )}
 
@@ -246,14 +240,14 @@ export default function Search() {
             {/* Summary + tabs */}
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-gray-600">
-                Tìm thấy <span className="font-semibold text-gray-900">{result.total}</span> kết quả
-                {q && <span> cho "<span className="text-blue-600">{q}</span>"</span>}
+                {t('search.found')} <span className="font-semibold text-gray-900">{result.total}</span> {t('common.results')}
+                {q && <span> {t('search.for')} "<span className="text-blue-600">{q}</span>"</span>}
               </p>
               <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
                 {([
-                  ['all', `Tất cả (${result.total})`],
-                  ['hotspot', `Điểm cháy (${hotspots.length})`],
-                  ['incident', `Sự cố (${incidents.length})`],
+                  ['all', `${t('search.allLabel')} (${result.total})`],
+                  ['hotspot', `${t('search.typeHotspot')} (${hotspots.length})`],
+                  ['incident', `${t('search.typeIncident')} (${incidents.length})`],
                 ] as [Tab, string][]).map(([tab, label]) => (
                   <button key={tab} onClick={() => setActiveTab(tab)}
                     className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
@@ -270,7 +264,7 @@ export default function Search() {
             {result.total === 0 ? (
               <div className="flex flex-col items-center justify-center h-32 text-gray-400 gap-2">
                 <span className="material-symbols-outlined text-4xl">search_off</span>
-                <p className="text-sm">Không tìm thấy kết quả phù hợp</p>
+                <p className="text-sm">{t('search.noResults')}</p>
               </div>
             ) : (
               <div className="space-y-6">
@@ -279,16 +273,16 @@ export default function Search() {
                   <div>
                     <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-sm text-red-500">crisis_alert</span>
-                      Điểm cháy ({displayHotspots.length})
+                      {t('search.hotspotSection')} ({displayHotspots.length})
                     </h2>
                     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide text-left">
-                            <th className="px-4 py-2.5">Device ID</th>
-                            <th className="px-4 py-2.5">Độ tin cậy</th>
-                            <th className="px-4 py-2.5">Tọa độ</th>
-                            <th className="px-4 py-2.5">Thời gian phát hiện</th>
+                            <th className="px-4 py-2.5">{t('search.colDeviceId')}</th>
+                            <th className="px-4 py-2.5">{t('search.colConfidence')}</th>
+                            <th className="px-4 py-2.5">{t('search.colCoords')}</th>
+                            <th className="px-4 py-2.5">{t('search.colDetectedAt')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -319,7 +313,7 @@ export default function Search() {
                   <div>
                     <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-sm text-amber-500">local_fire_department</span>
-                      Sự cố ({displayIncidents.length})
+                      {t('search.incidentSection')} ({displayIncidents.length})
                     </h2>
                     <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
                       {displayIncidents.map(inc => (
@@ -328,7 +322,7 @@ export default function Search() {
                             <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                               <span className="font-mono text-xs text-gray-400">{inc.incident_code}</span>
                               <span className={`text-xs px-1.5 py-0.5 rounded-full border ${STATUS_STYLE[inc.status] ?? 'text-gray-600 bg-gray-50 border-gray-200'}`}>
-                                {STATUS_LABEL[inc.status] ?? inc.status}
+                                {t(`search.statusLabels.${inc.status}`, { defaultValue: inc.status })}
                               </span>
                             </div>
                             <p className="text-sm font-medium text-gray-900 truncate">{inc.title}</p>
@@ -338,12 +332,12 @@ export default function Search() {
                           </div>
                           <div className="text-right flex-shrink-0">
                             <p className={`text-xs font-semibold ${PRIORITY_COLOR[inc.priority] ?? 'text-gray-600'}`}>
-                              {PRIORITY_LABEL[inc.priority] ?? inc.priority}
+                              {t(`search.priorityLabels.${inc.priority}`, { defaultValue: inc.priority })}
                             </p>
                             <p className="text-xs text-gray-400 mt-0.5">{inc.burn_area_acres} ha</p>
                             <p className="text-xs text-gray-400">{fmt(inc.created_at)}</p>
                           </div>
-                          <Link to="/incidents" className="flex-shrink-0 p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Xem sự cố">
+                          <Link to="/incidents" className="flex-shrink-0 p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title={t('common.viewAll')}>
                             <span className="material-symbols-outlined text-base">open_in_new</span>
                           </Link>
                         </div>

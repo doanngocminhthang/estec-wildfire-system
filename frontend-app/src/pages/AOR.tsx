@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import api from '../api/client'
 
 interface User {
@@ -54,10 +55,10 @@ const AREAS: Area[] = [
   { id: 'tk-008', name: 'Tiểu khu 008', type: 'tieu_khu', parent: 'muong-lat' },
 ]
 
-const TYPE_META = {
-  huyen:    { label: 'Huyện',     cls: 'bg-blue-50 text-blue-700 border-blue-200',     icon: 'location_city' },
-  xa:       { label: 'Xã',        cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: 'holiday_village' },
-  tieu_khu: { label: 'Tiểu khu',  cls: 'bg-amber-50 text-amber-700 border-amber-200',  icon: 'forest' },
+const TYPE_STYLES = {
+  huyen:    { cls: 'bg-blue-50 text-blue-700 border-blue-200',     icon: 'location_city' },
+  xa:       { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: 'holiday_village' },
+  tieu_khu: { cls: 'bg-amber-50 text-amber-700 border-amber-200',  icon: 'forest' },
 }
 
 const STORAGE_KEY = 'wf-aor-assignments'
@@ -87,6 +88,7 @@ interface ModalProps {
 }
 
 function AORModal({ ranger, assigned, onClose, onSave }: ModalProps) {
+  const { t } = useTranslation()
   const [selected, setSelected] = useState<Set<string>>(new Set(assigned))
   const [typeFilter, setTypeFilter] = useState<Area['type'] | ''>('')
   const [search, setSearch] = useState('')
@@ -104,7 +106,6 @@ function AORModal({ ranger, assigned, onClose, onSave }: ModalProps) {
     return matchType && matchSearch
   })
 
-  // Group by type for display
   const grouped = {
     huyen:    filtered.filter((a) => a.type === 'huyen'),
     xa:       filtered.filter((a) => a.type === 'xa'),
@@ -122,7 +123,7 @@ function AORModal({ ranger, assigned, onClose, onSave }: ModalProps) {
         {/* Header */}
         <div className="px-6 py-4 border-b border-[#e2e8f0] flex items-center justify-between flex-shrink-0">
           <div>
-            <h2 className="text-sm font-semibold text-[#1e293b]">Gán địa bàn phụ trách</h2>
+            <h2 className="text-sm font-semibold text-[#1e293b]">{t('aor.modalTitle')}</h2>
             <p className="text-xs text-[#64748b] mt-0.5">{ranger.full_name} · @{ranger.username}</p>
           </div>
           <button onClick={onClose} className="text-[#94a3b8] hover:text-[#64748b]">
@@ -137,7 +138,7 @@ function AORModal({ ranger, assigned, onClose, onSave }: ModalProps) {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm địa bàn..."
+              placeholder={t('aor.modalSearch')}
               className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#e2e8f0] rounded-lg focus:outline-none focus:border-[#1565c0]"
             />
           </div>
@@ -146,18 +147,18 @@ function AORModal({ ranger, assigned, onClose, onSave }: ModalProps) {
             onChange={(e) => setTypeFilter(e.target.value as Area['type'] | '')}
             className="text-xs border border-[#e2e8f0] rounded-lg px-2 py-1.5 bg-white text-[#1e293b] focus:outline-none focus:border-[#1565c0]"
           >
-            <option value="">Tất cả</option>
-            <option value="huyen">Huyện</option>
-            <option value="xa">Xã</option>
-            <option value="tieu_khu">Tiểu khu</option>
+            <option value="">{t('common.all')}</option>
+            <option value="huyen">{t('aor.types.huyen')}</option>
+            <option value="xa">{t('aor.types.xa')}</option>
+            <option value="tieu_khu">{t('aor.types.tieu_khu')}</option>
           </select>
         </div>
 
         {/* Selected count */}
         <div className="px-6 py-2 bg-[#f8fafc] border-b border-[#f1f5f9] flex-shrink-0">
-          <span className="text-xs text-[#64748b]">Đã chọn: <strong className="text-[#1565c0]">{selected.size}</strong> địa bàn</span>
+          <span className="text-xs text-[#64748b]">{t('aor.selected')}: <strong className="text-[#1565c0]">{selected.size}</strong> {t('aor.areasUnit')}</span>
           {selected.size > 0 && (
-            <button onClick={() => setSelected(new Set())} className="ml-3 text-xs text-red-500 hover:underline">Bỏ chọn tất cả</button>
+            <button onClick={() => setSelected(new Set())} className="ml-3 text-xs text-red-500 hover:underline">{t('aor.clearAll')}</button>
           )}
         </div>
 
@@ -166,12 +167,12 @@ function AORModal({ ranger, assigned, onClose, onSave }: ModalProps) {
           {(['huyen', 'xa', 'tieu_khu'] as const).map((type) => {
             const items = grouped[type]
             if (!items.length) return null
-            const meta = TYPE_META[type]
+            const styles = TYPE_STYLES[type]
             return (
               <div key={type}>
                 <p className="text-xs font-semibold text-[#64748b] mb-2 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-sm">{meta.icon}</span>
-                  {meta.label} ({items.length})
+                  <span className="material-symbols-outlined text-sm">{styles.icon}</span>
+                  {t(`aor.types.${type}`)} ({items.length})
                 </p>
                 <div className="space-y-1">
                   {items.map((area) => (
@@ -195,8 +196,8 @@ function AORModal({ ranger, assigned, onClose, onSave }: ModalProps) {
                           <span className="text-[10px] text-[#94a3b8] ml-1.5">· {parentName(area)}</span>
                         )}
                       </div>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${meta.cls}`}>
-                        {meta.label}
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${styles.cls}`}>
+                        {t(`aor.types.${type}`)}
                       </span>
                     </label>
                   ))}
@@ -209,13 +210,13 @@ function AORModal({ ranger, assigned, onClose, onSave }: ModalProps) {
         {/* Footer */}
         <div className="px-6 py-4 border-t border-[#e2e8f0] flex justify-end gap-3 flex-shrink-0">
           <button onClick={onClose} className="px-4 py-2 text-sm text-[#64748b] border border-[#e2e8f0] rounded-lg hover:bg-[#f8fafc]">
-            Hủy
+            {t('common.cancel')}
           </button>
           <button
             onClick={() => { onSave([...selected]); onClose() }}
             className="px-4 py-2 text-sm text-white bg-[#1565c0] rounded-lg hover:bg-[#1251a3] font-medium"
           >
-            Lưu địa bàn
+            {t('aor.saveAOR')}
           </button>
         </div>
       </div>
@@ -226,6 +227,7 @@ function AORModal({ ranger, assigned, onClose, onSave }: ModalProps) {
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AOR() {
+  const { t } = useTranslation()
   const [rangers, setRangers]       = useState<User[]>([])
   const [loading, setLoading]       = useState(true)
   const [assignments, setAssignments] = useState<Record<number, string[]>>(loadAssignments)
@@ -259,8 +261,8 @@ export default function AOR() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-lg font-bold text-[#1e293b]">Quản lý địa bàn phụ trách</h1>
-          <p className="text-xs text-[#64748b] mt-0.5">Gán khu vực tuần tra cho từng kiểm lâm viên</p>
+          <h1 className="text-lg font-bold text-[#1e293b]">{t('aor.title')}</h1>
+          <p className="text-xs text-[#64748b] mt-0.5">{t('aor.subtitle')}</p>
         </div>
       </div>
 
@@ -268,9 +270,9 @@ export default function AOR() {
       {!loading && (
         <div className="grid grid-cols-3 gap-4 mb-6">
           {[
-            { label: 'Tổng kiểm lâm', value: rangers.length,    icon: 'forest',        color: 'text-blue-600',    bg: 'bg-blue-50' },
-            { label: 'Đã gán địa bàn', value: totalAssigned,    icon: 'check_circle',  color: 'text-emerald-600', bg: 'bg-emerald-50' },
-            { label: 'Chưa gán',       value: rangers.length - totalAssigned, icon: 'warning', color: 'text-amber-600', bg: 'bg-amber-50' },
+            { label: t('aor.totalRangers'), value: rangers.length,                    icon: 'forest',       color: 'text-blue-600',    bg: 'bg-blue-50' },
+            { label: t('aor.assigned'),     value: totalAssigned,                     icon: 'check_circle', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            { label: t('aor.unassigned'),   value: rangers.length - totalAssigned,    icon: 'warning',      color: 'text-amber-600',   bg: 'bg-amber-50' },
           ].map(({ label, value, icon, color, bg }) => (
             <div key={label} className={`${bg} border border-[#e2e8f0] rounded-xl p-4 flex items-center gap-3`}>
               <span className={`material-symbols-outlined ${color} text-2xl`}>{icon}</span>
@@ -289,7 +291,7 @@ export default function AOR() {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Tìm kiểm lâm viên..."
+          placeholder={t('aor.searchPlaceholder')}
           className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-[#e2e8f0] rounded-lg focus:outline-none focus:border-[#1565c0] text-[#1e293b]"
         />
       </div>
@@ -299,7 +301,7 @@ export default function AOR() {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
-              {['Kiểm lâm viên', 'Trạng thái', 'Địa bàn phụ trách', 'Thao tác'].map((h) => (
+              {[t('aor.colRanger'), t('aor.colStatus'), t('aor.colAOR'), t('aor.colActions')].map((h) => (
                 <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-[#64748b] whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -314,7 +316,7 @@ export default function AOR() {
                 </tr>
               ))
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={4} className="px-4 py-8 text-center text-xs text-[#94a3b8]">Không có dữ liệu</td></tr>
+              <tr><td colSpan={4} className="px-4 py-8 text-center text-xs text-[#94a3b8]">{t('common.noData')}</td></tr>
             ) : (
               filtered.map((ranger) => {
                 const areaIds = assignments[ranger.id] ?? []
@@ -346,20 +348,20 @@ export default function AOR() {
                           : 'bg-slate-50 text-slate-400 border-slate-200'
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${ranger.is_active ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                        {ranger.is_active ? 'Hoạt động' : 'Đã khóa'}
+                        {ranger.is_active ? t('aor.statusActive') : t('aor.statusLocked')}
                       </span>
                     </td>
 
                     {/* AOR tags */}
                     <td className="px-4 py-3">
                       {!hasAOR ? (
-                        <span className="text-xs text-[#94a3b8] italic">Chưa gán địa bàn</span>
+                        <span className="text-xs text-[#94a3b8] italic">{t('aor.noAOR')}</span>
                       ) : (
                         <div className="flex flex-wrap gap-1">
                           {areas.slice(0, 4).map((a) => {
-                            const meta = TYPE_META[a.type]
+                            const styles = TYPE_STYLES[a.type]
                             return (
-                              <span key={a.id} className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${meta.cls}`}>
+                              <span key={a.id} className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${styles.cls}`}>
                                 {a.name}
                               </span>
                             )
@@ -380,7 +382,7 @@ export default function AOR() {
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#1565c0] border border-[#1565c0]/30 rounded-lg hover:bg-blue-50 transition-colors"
                       >
                         <span className="material-symbols-outlined text-sm">edit_location</span>
-                        Gán địa bàn
+                        {t('aor.assignBtn')}
                       </button>
                     </td>
                   </tr>
@@ -395,17 +397,17 @@ export default function AOR() {
       <div className="mt-4 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-4">
         <h3 className="text-xs font-semibold text-[#64748b] mb-3 flex items-center gap-1.5">
           <span className="material-symbols-outlined text-sm">info</span>
-          Phân cấp địa bàn
+          {t('aor.legendTitle')}
         </h3>
         <div className="flex gap-6">
-          {(Object.entries(TYPE_META) as [Area['type'], typeof TYPE_META[Area['type']]][]).map(([, meta]) => (
-            <div key={meta.label} className="flex items-center gap-2">
-              <span className={`material-symbols-outlined text-sm ${meta.cls.split(' ')[1]}`}>{meta.icon}</span>
-              <span className={`text-[11px] px-1.5 py-0.5 rounded border font-medium ${meta.cls}`}>{meta.label}</span>
+          {(Object.entries(TYPE_STYLES) as [Area['type'], typeof TYPE_STYLES[Area['type']]][]).map(([type, styles]) => (
+            <div key={type} className="flex items-center gap-2">
+              <span className={`material-symbols-outlined text-sm ${styles.cls.split(' ')[1]}`}>{styles.icon}</span>
+              <span className={`text-[11px] px-1.5 py-0.5 rounded border font-medium ${styles.cls}`}>{t(`aor.types.${type}`)}</span>
               <span className="text-[11px] text-[#94a3b8]">
-                {meta.label === 'Huyện' && '— đơn vị hành chính cấp huyện'}
-                {meta.label === 'Xã' && '— đơn vị hành chính cấp xã'}
-                {meta.label === 'Tiểu khu' && '— phân khu quản lý rừng'}
+                {type === 'huyen' && t('aor.legendDistrict')}
+                {type === 'xa' && t('aor.legendCommune')}
+                {type === 'tieu_khu' && t('aor.legendSubZone')}
               </span>
             </div>
           ))}

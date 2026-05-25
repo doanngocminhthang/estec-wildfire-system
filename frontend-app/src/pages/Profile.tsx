@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../store/authStore'
 import api from '../api/client'
 
@@ -58,6 +59,7 @@ function Field({ label, value, editing, onChange, type = 'text', disabled = fals
 }
 
 export default function Profile() {
+  const { t } = useTranslation()
   const { user } = useAuthStore()
   const [tab, setTab]         = useState<Tab>('info')
   const [editing, setEditing] = useState(false)
@@ -75,7 +77,6 @@ export default function Profile() {
   const [pwdMsg, setPwdMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [pwdSaving, setPwdSaving] = useState(false)
 
-  // Notification prefs
   const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_PREFS)
   const [prefsSaved, setPrefsSaved] = useState(false)
   const [pushPermission, setPushPermission] = useState<NotificationPermission>('default')
@@ -110,10 +111,10 @@ export default function Profile() {
     setMsg(null)
     try {
       await api.patch('/users/me', form)
-      setMsg({ type: 'ok', text: 'Đã lưu thông tin thành công.' })
+      setMsg({ type: 'ok', text: t('profile.saveOk') })
       setEditing(false)
     } catch {
-      setMsg({ type: 'err', text: 'Không thể lưu. Vui lòng thử lại.' })
+      setMsg({ type: 'err', text: t('profile.saveErr') })
     } finally {
       setSaving(false)
     }
@@ -133,30 +134,29 @@ export default function Profile() {
   const handleChangePassword = async () => {
     setPwdMsg(null)
     if (pwd.next !== pwd.confirm) {
-      setPwdMsg({ type: 'err', text: 'Mật khẩu xác nhận không khớp.' })
+      setPwdMsg({ type: 'err', text: t('profile.pwdMismatch') })
       return
     }
     if (pwd.next.length < 8) {
-      setPwdMsg({ type: 'err', text: 'Mật khẩu mới phải có ít nhất 8 ký tự.' })
+      setPwdMsg({ type: 'err', text: t('profile.pwdTooShort') })
       return
     }
     setPwdSaving(true)
     try {
       await api.post('/auth/change-password', { current_password: pwd.current, new_password: pwd.next })
-      setPwdMsg({ type: 'ok', text: 'Đã đổi mật khẩu thành công.' })
+      setPwdMsg({ type: 'ok', text: t('profile.pwdOk') })
       setPwd({ current: '', next: '', confirm: '' })
     } catch {
-      setPwdMsg({ type: 'err', text: 'Mật khẩu hiện tại không đúng hoặc có lỗi xảy ra.' })
+      setPwdMsg({ type: 'err', text: t('profile.pwdErr') })
     } finally {
       setPwdSaving(false)
     }
   }
 
-  const roleLabel = (user as { roles?: { name: string }[] })?.roles?.[0]?.name === 'admin'
-    ? 'Quản trị viên'
-    : (user as { roles?: { name: string }[] })?.roles?.[0]?.name === 'ranger'
-    ? 'Kiểm lâm'
-    : 'Quan sát'
+  const roleName = (user as { roles?: { name: string }[] })?.roles?.[0]?.name
+  const roleLabel = roleName === 'admin' ? t('profile.roleAdmin')
+    : roleName === 'ranger' ? t('profile.roleRanger')
+    : t('profile.roleViewer')
 
   const initial = (form.full_name || user?.username || '?').split(' ').pop()?.charAt(0).toUpperCase() ?? '?'
 
@@ -164,8 +164,8 @@ export default function Profile() {
     <div className="p-6 max-w-2xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-lg font-bold text-[#1e293b]">Thông tin cá nhân</h1>
-        <p className="text-xs text-[#64748b] mt-0.5">Quản lý hồ sơ và cài đặt tài khoản</p>
+        <h1 className="text-lg font-bold text-[#1e293b]">{t('profile.title')}</h1>
+        <p className="text-xs text-[#64748b] mt-0.5">{t('profile.subtitle')}</p>
       </div>
 
       {/* Avatar + name card */}
@@ -185,9 +185,9 @@ export default function Profile() {
       {/* Tabs */}
       <div className="flex gap-1 mb-5 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-1 w-fit">
         {([
-          { id: 'info',          label: 'Thông tin',    icon: 'person' },
-          { id: 'password',      label: 'Đổi mật khẩu', icon: 'lock' },
-          { id: 'notifications', label: 'Thông báo',    icon: 'notifications' },
+          { id: 'info',          label: t('profile.tabInfo'),     icon: 'person' },
+          { id: 'password',      label: t('profile.tabPassword'), icon: 'lock' },
+          { id: 'notifications', label: t('profile.tabNotify'),   icon: 'notifications' },
         ] as const).map(({ id, label, icon }) => (
           <button
             key={id}
@@ -208,14 +208,14 @@ export default function Profile() {
       {tab === 'info' && (
         <div className="bg-white border border-[#e2e8f0] rounded-xl p-5 shadow-sm space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Họ và tên"       value={form.full_name} editing={editing} onChange={(v) => set('full_name', v)} />
-            <Field label="Tên đăng nhập"   value={user?.username ?? ''} editing={editing} onChange={() => {}} disabled />
+            <Field label={t('profile.fullName')}  value={form.full_name} editing={editing} onChange={(v) => set('full_name', v)} />
+            <Field label={t('profile.username')}  value={user?.username ?? ''} editing={editing} onChange={() => {}} disabled />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Email"           value={form.email}     editing={editing} onChange={(v) => set('email', v)} type="email" />
-            <Field label="Số điện thoại"   value={form.phone}     editing={editing} onChange={(v) => set('phone', v)} type="tel" />
+            <Field label={t('profile.email')}     value={form.email}  editing={editing} onChange={(v) => set('email', v)} type="email" />
+            <Field label={t('profile.phone')}     value={form.phone}  editing={editing} onChange={(v) => set('phone', v)} type="tel" />
           </div>
-          <Field label="Đơn vị công tác"  value={form.unit}      editing={editing} onChange={(v) => set('unit', v)} />
+          <Field label={t('profile.unit')}        value={form.unit}   editing={editing} onChange={(v) => set('unit', v)} />
 
           {msg && (
             <div className={`flex items-center gap-2 p-3 rounded-lg text-xs ${
@@ -232,14 +232,14 @@ export default function Profile() {
             {editing ? (
               <>
                 <button onClick={handleCancel} className="px-4 py-2 text-sm text-[#64748b] border border-[#e2e8f0] rounded-lg hover:bg-[#f8fafc]">
-                  Hủy
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={saving}
                   className="px-4 py-2 text-sm text-white bg-[#1565c0] rounded-lg hover:bg-[#1251a3] font-medium disabled:opacity-60"
                 >
-                  {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                  {saving ? t('profile.saving') : t('common.save')}
                 </button>
               </>
             ) : (
@@ -248,7 +248,7 @@ export default function Profile() {
                 className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-[#1565c0] rounded-lg hover:bg-[#1251a3] font-medium"
               >
                 <span className="material-symbols-outlined text-sm">edit</span>
-                Chỉnh sửa
+                {t('profile.edit')}
               </button>
             )}
           </div>
@@ -259,18 +259,18 @@ export default function Profile() {
       {tab === 'notifications' && (
         <div className="space-y-4">
 
-          {/* Kênh nhận thông báo */}
+          {/* Notification channels */}
           <div className="bg-white border border-[#e2e8f0] rounded-xl p-5 shadow-sm space-y-4">
             <h2 className="text-sm font-semibold text-[#1e293b] flex items-center gap-2">
               <span className="material-symbols-outlined text-[#1565c0] text-base">sensors</span>
-              Kênh nhận thông báo
+              {t('profile.notifChannels')}
             </h2>
             <div className="space-y-3">
               {/* In-app */}
               <div className="flex items-center justify-between py-2 border-b border-[#f1f5f9]">
                 <div>
-                  <p className="text-sm font-medium text-[#1e293b]">Trong ứng dụng</p>
-                  <p className="text-xs text-[#64748b]">Chuông thông báo góc trên phải màn hình</p>
+                  <p className="text-sm font-medium text-[#1e293b]">{t('profile.notifInApp')}</p>
+                  <p className="text-xs text-[#64748b]">{t('profile.notifInAppDesc')}</p>
                 </div>
                 <Toggle on={prefs.channels.inapp} onChange={(v) => setChannel('inapp', v)} />
               </div>
@@ -287,18 +287,18 @@ export default function Profile() {
               {/* Push */}
               <div className="flex items-center justify-between py-2">
                 <div>
-                  <p className="text-sm font-medium text-[#1e293b]">Push (trình duyệt)</p>
+                  <p className="text-sm font-medium text-[#1e293b]">{t('profile.notifPush')}</p>
                   <p className="text-xs text-[#64748b]">
-                    {pushPermission === 'granted' ? 'Đã cấp quyền'
-                      : pushPermission === 'denied' ? 'Đã từ chối — mở lại trong cài đặt trình duyệt'
-                      : 'Chưa cấp quyền thông báo'}
+                    {pushPermission === 'granted' ? t('profile.pushGranted')
+                      : pushPermission === 'denied' ? t('profile.pushDenied')
+                      : t('profile.pushDefault')}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {pushPermission === 'default' && (
                     <button onClick={requestPush}
                       className="text-xs text-[#1565c0] border border-[#1565c0] px-2 py-1 rounded-lg hover:bg-blue-50 transition-colors whitespace-nowrap">
-                      Cho phép
+                      {t('profile.pushAllow')}
                     </button>
                   )}
                   <Toggle
@@ -311,19 +311,19 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Mức độ tối thiểu */}
+          {/* Minimum severity */}
           <div className="bg-white border border-[#e2e8f0] rounded-xl p-5 shadow-sm space-y-3">
             <h2 className="text-sm font-semibold text-[#1e293b] flex items-center gap-2">
               <span className="material-symbols-outlined text-[#f59e0b] text-base">tune</span>
-              Mức độ nguy hiểm tối thiểu
+              {t('profile.severityTitle')}
             </h2>
-            <p className="text-xs text-[#64748b]">Chỉ nhận thông báo từ mức này trở lên</p>
+            <p className="text-xs text-[#64748b]">{t('profile.severityDesc')}</p>
             <div className="grid grid-cols-2 gap-2">
               {([
-                { id: 'low',      label: 'Tất cả (thấp+)',  color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
-                { id: 'medium',   label: 'Trung bình+',     color: 'text-amber-600   bg-amber-50   border-amber-200'   },
-                { id: 'high',     label: 'Cao+',            color: 'text-orange-600  bg-orange-50  border-orange-200'  },
-                { id: 'critical', label: 'Chỉ khẩn cấp',   color: 'text-red-600     bg-red-50     border-red-200'     },
+                { id: 'low',      label: t('profile.severityLow'),      color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
+                { id: 'medium',   label: t('profile.severityMedium'),   color: 'text-amber-600   bg-amber-50   border-amber-200'   },
+                { id: 'high',     label: t('profile.severityHigh'),     color: 'text-orange-600  bg-orange-50  border-orange-200'  },
+                { id: 'critical', label: t('profile.severityCritical'), color: 'text-red-600     bg-red-50     border-red-200'     },
               ] as const).map(({ id, label, color }) => (
                 <button key={id} onClick={() => setPrefs(p => ({ ...p, minSeverity: id }))}
                   className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-xs font-medium transition-all ${
@@ -338,18 +338,18 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Loại sự kiện */}
+          {/* Event types */}
           <div className="bg-white border border-[#e2e8f0] rounded-xl p-5 shadow-sm space-y-3">
             <h2 className="text-sm font-semibold text-[#1e293b] flex items-center gap-2">
               <span className="material-symbols-outlined text-[#64748b] text-base">checklist</span>
-              Loại sự kiện
+              {t('profile.eventsTitle')}
             </h2>
             <div className="space-y-2">
               {([
-                { key: 'newHotspot',   icon: 'crisis_alert',          label: 'Điểm cháy mới phát hiện',     desc: 'Khi cảm biến/vệ tinh phát hiện hotspot' },
-                { key: 'newIncident',  icon: 'local_fire_department',  label: 'Sự cố mới được tạo',          desc: 'Khi admin tạo một incident mới' },
-                { key: 'taskAssigned', icon: 'assignment_ind',         label: 'Nhiệm vụ được giao cho tôi',  desc: 'Khi admin giao nhiệm vụ xác minh' },
-                { key: 'taskOverdue',  icon: 'schedule',               label: 'Nhiệm vụ trễ deadline',       desc: 'Nhắc nhở khi nhiệm vụ sắp hoặc đã trễ hạn' },
+                { key: 'newHotspot',   icon: 'crisis_alert',         label: t('profile.eventNewHotspot'),    desc: t('profile.eventNewHotspotDesc') },
+                { key: 'newIncident',  icon: 'local_fire_department', label: t('profile.eventNewIncident'),   desc: t('profile.eventNewIncidentDesc') },
+                { key: 'taskAssigned', icon: 'assignment_ind',        label: t('profile.eventTaskAssigned'),  desc: t('profile.eventTaskAssignedDesc') },
+                { key: 'taskOverdue',  icon: 'schedule',              label: t('profile.eventTaskOverdue'),   desc: t('profile.eventTaskOverdueDesc') },
               ] as const).map(({ key, icon, label, desc }) => {
                 const on = prefs.events[key]
                 return (
@@ -373,12 +373,12 @@ export default function Profile() {
 
           {/* Save */}
           <div className="flex items-center justify-between">
-            <p className="text-xs text-[#94a3b8]">Cài đặt được lưu trên thiết bị này</p>
+            <p className="text-xs text-[#94a3b8]">{t('profile.deviceStored')}</p>
             <button onClick={handleSavePrefs}
               className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-[#1565c0] rounded-lg hover:bg-[#1251a3] font-medium transition-colors">
               {prefsSaved
-                ? <><span className="material-symbols-outlined text-sm">check_circle</span>Đã lưu</>
-                : <><span className="material-symbols-outlined text-sm">save</span>Lưu cài đặt</>}
+                ? <><span className="material-symbols-outlined text-sm">check_circle</span>{t('profile.savedPref')}</>
+                : <><span className="material-symbols-outlined text-sm">save</span>{t('profile.savePref')}</>}
             </button>
           </div>
         </div>
@@ -389,13 +389,13 @@ export default function Profile() {
         <div className="bg-white border border-[#e2e8f0] rounded-xl p-5 shadow-sm space-y-4">
           <div className="p-3 bg-[#f8fafc] rounded-lg border border-[#e2e8f0] text-xs text-[#64748b] flex items-start gap-2">
             <span className="material-symbols-outlined text-sm text-[#94a3b8] mt-0.5">info</span>
-            <span>Mật khẩu mới phải có ít nhất 8 ký tự, nên bao gồm chữ hoa, chữ thường và số.</span>
+            <span>{t('profile.pwdHint')}</span>
           </div>
 
           {[
-            { label: 'Mật khẩu hiện tại', key: 'current' },
-            { label: 'Mật khẩu mới',      key: 'next' },
-            { label: 'Xác nhận mật khẩu', key: 'confirm' },
+            { label: t('profile.oldPassword'),     key: 'current' },
+            { label: t('profile.newPassword'),     key: 'next' },
+            { label: t('profile.confirmPassword'), key: 'confirm' },
           ].map(({ label, key }) => (
             <div key={key}>
               <label className="block text-xs font-medium text-[#64748b] mb-1">{label}</label>
@@ -427,7 +427,7 @@ export default function Profile() {
               className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-[#1565c0] rounded-lg hover:bg-[#1251a3] font-medium disabled:opacity-60"
             >
               <span className="material-symbols-outlined text-sm">lock_reset</span>
-              {pwdSaving ? 'Đang đổi...' : 'Đổi mật khẩu'}
+              {pwdSaving ? t('profile.changingPwd') : t('profile.changePwd')}
             </button>
           </div>
         </div>
