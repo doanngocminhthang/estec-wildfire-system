@@ -1,8 +1,12 @@
+import logging
+
 from sqlalchemy import text
 
 from app.core.security import hash_password
 from app.db.database import SessionLocal, engine
 from app.db.models import Permission, Role, User
+
+logger = logging.getLogger(__name__)
 
 _DEFAULT_ROLES = [
     ("admin",      "Quản trị hệ thống"),
@@ -35,14 +39,34 @@ _PROFILE_COLUMNS = [
     ("unit",      "VARCHAR(150)"),
 ]
 
+# Extra columns added to hotspots for FIRMS satellite integration
+_HOTSPOT_FIRMS_COLUMNS = [
+    ("satellite", "VARCHAR(50)"),
+    ("source",    "VARCHAR(50)"),
+    ("frp",       "FLOAT"),
+    ("firms_uid", "VARCHAR(120)"),
+]
+
+
+def _exec_ddl(sql: str) -> None:
+    """Run a DDL statement in its own connection; silently skip if it fails (e.g. already exists)."""
+    try:
+        with engine.connect() as c:
+            c.execute(text(sql))
+            c.commit()
+    except Exception as exc:
+        logger.debug("DDL skipped (likely already applied): %s", exc)
+
 
 def migrate_schema() -> None:
     """Add any missing columns/tables to existing schema (idempotent)."""
     with engine.connect() as conn:
+        # User profile columns
         for col, col_type in _PROFILE_COLUMNS:
             conn.execute(text(
                 f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {col_type}"
             ))
+
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS bulletins (
                 id SERIAL PRIMARY KEY,
@@ -56,7 +80,29 @@ def migrate_schema() -> None:
                     CHECK (priority IN ('info', 'warning', 'critical'))
             )
         """))
+
+        # FIRMS satellite integration columns on hotspots
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
+        conn.execute(text(
+            "ALTER TABLE hotspots ADD COLUMN IF NOT EXISTS geom geometry(Point, 4326)"
+        ))
+        for col, col_type in _HOTSPOT_FIRMS_COLUMNS:
+            conn.execute(text(
+                f"ALTER TABLE hotspots ADD COLUMN IF NOT EXISTS {col} {col_type}"
+            ))
+
         conn.commit()
+
+    # Unique constraint on firms_uid — no IF NOT EXISTS in PostgreSQL for constraints,
+    # so we use a helper that ignores duplicate-object errors.
+    _exec_ddl(
+        "ALTER TABLE hotspots ADD CONSTRAINT uq_hotspots_firms_uid UNIQUE (firms_uid)"
+    )
+    # Spatial index for map queries
+    _exec_ddl(
+        "CREATE INDEX IF NOT EXISTS ix_hotspots_geom "
+        "ON hotspots USING GIST (geom) WHERE geom IS NOT NULL"
+    )
 
 
 def seed_default_data() -> None:

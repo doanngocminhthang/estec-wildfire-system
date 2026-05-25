@@ -1,14 +1,19 @@
 import asyncio
+import logging
 
 from app.api.v1.api import api_router
 from app.api.v1.ws_manager import manager as ws_manager
+from app.core.config import settings
 from app.db import models  # noqa: F401 — register all ORM models with Base
 from app.db.database import Base, SessionLocal, engine
 from app.db.models import Hotspot
 from app.db.seed import migrate_schema, seed_default_data
+from app.services.firms_service import sync_firms
 
 # Reuse the existing single-file app to preserve legacy endpoints (/api/hotspots, /api/incidents, etc.)
 from main import app  # noqa: E402
+
+logger = logging.getLogger(__name__)
 
 app.include_router(api_router, prefix="/api/v1")
 
@@ -48,6 +53,30 @@ async def _hotspot_poller() -> None:
             db.close()
 
 
+async def _firms_sync_loop() -> None:
+    """Periodically pull NASA FIRMS satellite hotspot data into the local DB."""
+    if not settings.firms_sync_hours or not settings.firms_map_key:
+        if not settings.firms_map_key:
+            logger.warning(
+                "FIRMS auto-sync disabled: FIRMS_MAP_KEY not set. "
+                "Register at https://firms.modaps.eosdis.nasa.gov/api/"
+            )
+        return
+
+    # Wait a bit after startup before the first sync
+    await asyncio.sleep(15)
+    while True:
+        db = SessionLocal()
+        try:
+            result = await sync_firms(db, days=1)
+            logger.info("FIRMS auto-sync: %s", result)
+        except Exception as exc:
+            logger.exception("FIRMS auto-sync error: %s", exc)
+        finally:
+            db.close()
+        await asyncio.sleep(settings.firms_sync_hours * 3600)
+
+
 @app.on_event("startup")
 async def on_startup():
     global _last_hotspot_id
@@ -64,3 +93,4 @@ async def on_startup():
         db.close()
 
     asyncio.create_task(_hotspot_poller())
+    asyncio.create_task(_firms_sync_loop())

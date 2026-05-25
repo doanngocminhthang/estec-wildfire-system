@@ -16,6 +16,7 @@ export default function Sidebar() {
     { to: '/bulletins', icon: 'campaign',              label: t('nav.bulletins') },
     { to: '/search',      icon: 'manage_search', label: t('nav.search') },
     { to: '/performance', icon: 'leaderboard',   label: t('nav.performance') },
+    { to: '/timelapse',   icon: 'satellite_alt', label: t('nav.timelapse') },
     { to: '/faq',         icon: 'help_center',   label: t('nav.faq') },
   ]
 

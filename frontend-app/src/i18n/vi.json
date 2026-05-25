@@ -9,6 +9,7 @@
     "search":       "Tìm kiếm",
     "performance":  "Hiệu suất",
     "faq":          "Trợ giúp",
+    "timelapse":    "Time-lapse",
     "users":        "Người dùng",
     "aor":          "Địa bàn",
     "auditLog":     "Nhật ký",
@@ -263,6 +264,32 @@
     "noResult":          "Không tìm thấy câu hỏi phù hợp",
     "contact":           "Không tìm thấy câu trả lời?",
     "contactDesc":       "Liên hệ quản trị viên hệ thống hoặc đội kỹ thuật ESTEC để được hỗ trợ."
+  },
+  "timelapse": {
+    "title":    "Time-lapse Biến động Rừng",
+    "subtitle": "Theo dõi thay đổi độ che phủ rừng và điểm cháy theo thời gian (2023–2025)",
+    "showNdvi": "Hiển thị lớp NDVI",
+    "ndviScale": "Chỉ số NDVI:",
+    "speed":    "Tốc độ:",
+    "dataNote": "Dữ liệu mô phỏng từ MODIS/Terra. Sẵn sàng tích hợp ảnh vệ tinh thật khi có pipeline Sentinel/Landsat.",
+    "ndviLevels": {
+      "veryHealthy": "Rừng rất xanh tốt",
+      "healthy":     "Rừng xanh tốt",
+      "stressed":    "Rừng đang bị stress",
+      "critical":    "Rừng suy giảm nghiêm trọng",
+      "burned":      "Rừng cháy / Trơ trụi"
+    },
+    "stats": {
+      "ndvi":        "Chỉ số NDVI",
+      "forestCover": "Độ che phủ rừng",
+      "totalArea":   "Tổng diện tích rừng:",
+      "alerts":      "Số cảnh báo",
+      "alertsSub":   "Điểm cháy phát hiện trong tháng",
+      "burnArea":    "Diện tích cháy",
+      "burnAreaSub": "Ước tính trong tháng",
+      "trend":       "Xu hướng NDVI",
+      "last12Months": "12 tháng gần nhất"
+    }
   },
   "layout": {
     "systemTitle": "Hệ thống Phòng cháy chữa cháy rừng tỉnh Thanh Hóa",

@@ -10,6 +10,7 @@
 
 | Route | File | Trạng thái |
 |---|---|---|
+| `/timelapse` | `Timelapse.tsx` | ✅ Time-lapse NDVI, timeline scrubber, play/pause |
 | `/login` | `Login.tsx` | ✅ JWT auth |
 | `/dashboard` | `Dashboard.tsx` | ✅ Stats API + incidents gần đây + quick actions |
 | `/map` | `MapPage.tsx` | ✅ 3 basemaps, 6 layers, goto/measure/draw/heatmap/bookmark, click popup |
@@ -75,7 +76,7 @@
 | 27 | Dashboard thống kê trực quan | ✅ Hoàn thành | `/analytics` — bar/pie/area charts |
 | 28 | Xuất dữ liệu CSV/XLSX/GeoJSON | ✅ Hoàn thành | Export button trên các trang list |
 | 29 | Dashboard hiệu suất cá nhân (KPI) | ✅ Hoàn thành | `/performance` — KPI cards, charts, leaderboard (admin) |
-| 30 | Time-lapse (video biến đổi rừng) | ❌ Chưa làm | Image sequencing |
+| 30 | Time-lapse (video biến đổi rừng) | ✅ Hoàn thành | `/timelapse` — timeline scrubber, NDVI overlay, stats panel, play/pause/speed, 36 mốc tháng 2023–2025 |
 | 31 | Hướng dẫn sử dụng / FAQ | ✅ Hoàn thành | `/faq` — search, categories, accordion Q&A, quick links |
 | 32 | Đa ngôn ngữ (i18n) | ✅ Hoàn thành | VI/EN switch — i18next, LangSwitcher, dịch toàn bộ pages: Login/Dashboard/Incidents/Hotspots/Analytics + Sidebar/Layout |
 
@@ -99,18 +100,29 @@
 | Bản đồ & GIS | 8 | 5 | 3 |
 | Quản trị & Bảo mật | 6 | 4 | 2 |
 | Cảnh báo & Xử lý | 11 | 8 | 3 |
-| Thống kê & Báo cáo | 7 | 6 | 1 |
+| Thống kê & Báo cáo | 7 | 7 | 0 |
 | AI & Viễn thám | 6 | 1 | 5 |
-| **Tổng** | **38** | **24** | **14** |
+| **Tổng** | **38** | **25** | **13** |
 
 ---
+
+## Infrastructure đã thêm
+
+### NASA FIRMS Satellite Integration (2026-05-25)
+
+Backend tự động kéo điểm cháy thật từ vệ tinh MODIS/VIIRS về DB:
+
+- `backend_api/app/services/firms_service.py` — fetch + parse + upsert
+- `backend_api/app/api/v1/endpoints/firms.py` — `GET /api/v1/firms/status`, `POST /api/v1/firms/sync`
+- Schema: thêm cột `geom`, `satellite`, `source`, `frp`, `firms_uid` vào bảng `hotspots`
+- Auto-sync mỗi 3 giờ khi backend khởi động (nếu có `FIRMS_MAP_KEY`)
+- **Để kích hoạt:** đăng ký key miễn phí tại firms.modaps.eosdis.nasa.gov/api/ → set `FIRMS_MAP_KEY=<key>` trong `.env`
 
 ## Ưu tiên tiếp theo (web app)
 
 ✅ Tất cả module web ưu tiên đã hoàn thành!
 
 **Còn tiềm năng mở rộng:**
-- Module 30 — Time-lapse video biến đổi rừng (phụ thuộc dữ liệu ảnh)
 - Module 38 — OpenAPI docs / webhook integration
 - Hoàn thiện i18n cho các pages còn lại: Users, Profile, AuditLog, Bulletins, Search, AOR, Performance
 

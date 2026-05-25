@@ -9,6 +9,7 @@
     "search":       "Search",
     "performance":  "Performance",
     "faq":          "Help",
+    "timelapse":    "Time-lapse",
     "users":        "Users",
     "aor":          "AOR",
     "auditLog":     "Audit Log",
@@ -263,6 +264,32 @@
     "noResult":          "No matching questions found",
     "contact":           "Can't find an answer?",
     "contactDesc":       "Contact your system administrator or the ESTEC technical team for support."
+  },
+  "timelapse": {
+    "title":    "Forest Change Time-lapse",
+    "subtitle": "Track forest cover changes and fire hotspots over time (2023–2025)",
+    "showNdvi": "Show NDVI layer",
+    "ndviScale": "NDVI index:",
+    "speed":    "Speed:",
+    "dataNote": "Simulated data from MODIS/Terra. Ready to integrate real satellite imagery when Sentinel/Landsat pipeline is available.",
+    "ndviLevels": {
+      "veryHealthy": "Very healthy forest",
+      "healthy":     "Healthy forest",
+      "stressed":    "Stressed forest",
+      "critical":    "Severely degraded forest",
+      "burned":      "Burned / Bare land"
+    },
+    "stats": {
+      "ndvi":        "NDVI Index",
+      "forestCover": "Forest Cover",
+      "totalArea":   "Total forest area:",
+      "alerts":      "Alert Count",
+      "alertsSub":   "Fire points detected this month",
+      "burnArea":    "Burn Area",
+      "burnAreaSub": "Estimated this month",
+      "trend":       "NDVI Trend",
+      "last12Months": "Last 12 months"
+    }
   },
   "layout": {
     "systemTitle": "Thanh Hoa Forest Fire Prevention & Fighting System",
