@@ -163,6 +163,11 @@
     "colConfidence":  "Confidence",
     "colPhoto":       "Photo",
     "colDetectedAt":  "Detected At",
+    "colSatellite":   "Satellite",
+    "colFrp":         "FRP (MW)",
+    "allSources":     "All sources",
+    "iotLabel":       "IoT",
+    "frpTooltip":     "Fire Radiative Power",
     "high":           "High",
     "medium":         "Medium",
     "low":            "Low"

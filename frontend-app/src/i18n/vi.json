@@ -163,6 +163,11 @@
     "colConfidence":"Độ tin cậy",
     "colPhoto":     "Ảnh",
     "colDetectedAt":"Thời gian phát hiện",
+    "colSatellite": "Vệ tinh",
+    "colFrp":       "FRP (MW)",
+    "allSources":   "Tất cả nguồn",
+    "iotLabel":     "IoT",
+    "frpTooltip":   "Cường độ cháy (Fire Radiative Power)",
     "high":         "Cao",
     "medium":       "Trung bình",
     "low":          "Thấp"

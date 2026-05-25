@@ -54,9 +54,12 @@ class Hotspot(BaseModel):
     device_id: str
     confidence_score: float
     detected_at: datetime
-    longitude: float
-    latitude: float
+    longitude: Optional[float] = None
+    latitude: Optional[float] = None
     snapshot_url: Optional[str] = None
+    satellite: Optional[str] = None
+    source: Optional[str] = None
+    frp: Optional[float] = None
 
 class SystemStats(BaseModel):
     total_incidents: int
@@ -112,29 +115,41 @@ def health_check():
     return {"status": "unhealthy", "database": "disconnected"}
 
 @app.get("/api/hotspots", response_model=List[Hotspot])
-def get_hotspots(limit: int = 100):
-    """Lấy danh sách các điểm cháy mới nhất."""
+def get_hotspots(limit: int = 100, source: Optional[str] = None):
+    """Lấy danh sách các điểm cháy mới nhất. source: VIIRS_SNPP_NRT | VIIRS_NOAA20_NRT | MODIS_NRT | iot"""
     conn = get_db_connection()
     if not conn:
         raise HTTPException(status_code=500, detail="Không thể kết nối cơ sở dữ liệu")
-        
+
     try:
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        # Sử dụng hàm ST_X và ST_Y của PostGIS để lấy toạ độ
-        query = """
-            SELECT 
-                id, 
-                device_id, 
-                confidence_score, 
-                detected_at, 
-                ST_X(geom) as longitude, 
-                ST_Y(geom) as latitude, 
-                snapshot_url
+        conditions: list = []
+        params: list = []
+        if source == 'iot':
+            conditions.append("source IS NULL")
+        elif source:
+            conditions.append("source = %s")
+            params.append(source)
+        where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+        query = f"""
+            SELECT
+                id,
+                device_id,
+                confidence_score,
+                detected_at,
+                ST_X(geom) as longitude,
+                ST_Y(geom) as latitude,
+                snapshot_url,
+                satellite,
+                source,
+                frp
             FROM hotspots
+            {where}
             ORDER BY detected_at DESC
             LIMIT %s
         """
-        cursor.execute(query, (limit,))
+        params.append(limit)
+        cursor.execute(query, params)
         records = cursor.fetchall()
         return records
     except Exception as e:
