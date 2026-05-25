@@ -1,7 +1,7 @@
 # Tiến độ triển khai — Wildfire Alert System
 
-> Cập nhật lần cuối: 2026-05-23  
-> Branch: `develop`  
+> Cập nhật lần cuối: 2026-05-25  
+> Branch: `feature/module-32-i18n`  
 > Stack: React + Vite + TypeScript + Tailwind + MapLibre GL (frontend) | FastAPI (backend)
 
 ---
@@ -19,11 +19,13 @@
 | `/hotspots` | `Hotspots.tsx` | ✅ Table + search/filter |
 | `/analytics` | `Analytics.tsx` | ✅ Recharts: bar/pie/area |
 | `/users` | `Users.tsx` | ✅ CRUD admin + toggle active |
-| `/profile` | `Profile.tsx` | ✅ Tab thông tin + tab đổi mật khẩu |
+| `/profile` | `Profile.tsx` | ✅ Tab thông tin + đổi mật khẩu + thông báo |
 | `/aor` | `AOR.tsx` | ✅ Gán địa bàn huyện/xã/tiểu khu cho kiểm lâm (admin) |
+| `/performance` | `Performance.tsx` | ✅ KPI cards, charts, leaderboard SLA |
 | `/audit-log` | `AuditLog.tsx` | ✅ Nhật ký kiểm toán, filter theo loại |
 | `/bulletins` | `Bulletins.tsx` | ✅ Bảng tin CRUD, pin/unpin |
 | `/search` | `Search.tsx` | ✅ Tìm kiếm đa thuộc tính nâng cao |
+| `/cameras` | `CameraStations.tsx` | ✅ Quản lý camera AI, phát hiện cháy từ camera Hikvision |
 
 ---
 
@@ -79,7 +81,7 @@
 | 29 | Dashboard hiệu suất cá nhân (KPI) | ✅ Hoàn thành | `/performance` — KPI cards, charts, leaderboard (admin) |
 | 30 | Time-lapse (video biến đổi rừng) | ✅ Hoàn thành | `/timelapse` — timeline scrubber, NDVI overlay, stats panel, play/pause/speed, 36 mốc tháng 2023–2025 |
 | 31 | Hướng dẫn sử dụng / FAQ | ✅ Hoàn thành | `/faq` — search, categories, accordion Q&A, quick links |
-| 32 | Đa ngôn ngữ (i18n) | ✅ Hoàn thành | VI/EN switch — i18next, LangSwitcher, dịch toàn bộ pages: Login/Dashboard/Incidents/Hotspots/Analytics + Sidebar/Layout |
+| 32 | Đa ngôn ngữ (i18n) | ✅ Hoàn thành | VI/EN — i18next, LangSwitcher, dịch 100% tất cả pages: Login/Dashboard/Incidents/Hotspots/Analytics/Map/Users/Profile/AOR/AuditLog/Bulletins/Search/Performance/Timelapse/Integrations/CameraStations + Sidebar/Layout |
 
 ### V. AI & Viễn thám
 
@@ -98,16 +100,29 @@
 
 | Nhóm | Tổng | Hoàn thành | Còn lại |
 |---|---|---|---|
-| Bản đồ & GIS | 8 | 5 | 3 |
-| Quản trị & Bảo mật | 6 | 4 | 2 |
+| Bản đồ & GIS | 8 | 6 | 2 |
+| Quản trị & Bảo mật | 6 | 6 | 0 |
 | Cảnh báo & Xử lý | 11 | 8 | 3 |
 | Thống kê & Báo cáo | 7 | 7 | 0 |
-| AI & Viễn thám | 6 | 1 | 5 |
-| **Tổng** | **38** | **26** | **12** |
+| AI & Viễn thám | 6 | 2 | 4 |
+| **Tổng** | **38** | **29** | **9** |
 
 ---
 
 ## Infrastructure đã thêm
+
+### Camera AI Integration (2026-05-25)
+
+Backend + frontend tích hợp hệ thống camera Hikvision PTZ phát hiện cháy bằng YOLO:
+
+- `backend_api/app/services/camera_geo.py` — geo utils: PTZ control, DEM ray-casting, geopandas PIP, fire danger index
+- `backend_api/app/services/email_alert.py` — email cảnh báo HTML kèm snapshot
+- `backend_api/app/api/v1/endpoints/cameras.py` — CRUD camera stations + ingest fire detections + confirm/reject
+- `backend_api/app/api/v1/endpoints/sensors.py` — ingest weather data + auto-compute P index
+- `frontend-app/src/pages/CameraStations.tsx` — UI quản lý trạm + bảng phát hiện cháy (pending/confirmed/rejected)
+- **Tích hợp HoanVo:** run_model.py POST đến `/api/v1/cameras/ingest` thay vì ghi thẳng vào DB cũ
+- **Không phụ thuộc schema cũ** — SQLAlchemy ORM độc lập (camera_stations, fire_detections, weather_records)
+- Các dep nặng (rasterio, geopandas, torch, cv2) import lazy — backend vẫn chạy bình thường nếu thiếu
 
 ### NASA FIRMS Satellite Integration (2026-05-25)
 
@@ -121,11 +136,12 @@ Backend tự động kéo điểm cháy thật từ vệ tinh MODIS/VIIRS về D
 
 ## Ưu tiên tiếp theo (web app)
 
-✅ Tất cả module web ưu tiên đã hoàn thành!
+✅ Tất cả module web ưu tiên đã hoàn thành! i18n 100% pages xong.
 
 **Còn tiềm năng mở rộng:**
-- Module 38 — OpenAPI docs / webhook integration
-- Hoàn thiện i18n cho các pages còn lại: Users, Profile, AuditLog, Bulletins, Search, AOR, Performance
+- FIRMS UI: thêm satellite badge, cột FRP, filter source vào Hotspots.tsx
+- CameraStations.tsx: hoàn thiện i18n (hiện vẫn còn một số text cứng tiếng Việt)
+- Module 6/7/18–20: mobile app ranger (ngoài scope web)
 
 ## Không ưu tiên (mobile/AI)
 
@@ -149,7 +165,10 @@ frontend-app/src/
 │   ├── Profile.tsx      — profile + change password
 │   ├── AuditLog.tsx     — immutable log viewer
 │   ├── Bulletins.tsx    — broadcast messages
-│   └── Search.tsx       — advanced search
+│   ├── Search.tsx       — advanced search
+│   ├── AOR.tsx          — ranger area assignments
+│   ├── Performance.tsx  — KPI + leaderboard
+│   └── CameraStations.tsx — camera AI + fire detections
 ├── components/
 │   ├── Layout.tsx       — header + NotificationBell
 │   ├── Sidebar.tsx      — nav links
