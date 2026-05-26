@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import api from '../api/client'
 import { useAuthStore } from '../store/authStore'
 
@@ -59,21 +60,19 @@ const STATUS_CLS: Record<string, string> = {
   rejected:  'text-slate-500 bg-slate-50 border-slate-200',
 }
 
-const STATUS_VI: Record<string, string> = {
-  pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', rejected: 'Đã từ chối',
-}
-
 function fmtCoord(v: number | null, decimals = 5) {
   return v != null ? v.toFixed(decimals) : '—'
 }
 
-function fmtDate(s: string) {
-  return new Date(s).toLocaleString('vi-VN')
+function fmtDate(s: string, locale: string) {
+  return new Date(s).toLocaleString(locale)
 }
 
 export default function CameraStations() {
+  const { t, i18n } = useTranslation()
   const { hasRole } = useAuthStore()
   const isAdmin = hasRole('admin')
+  const locale = i18n.language === 'en' ? 'en-US' : 'vi-VN'
 
   const [tab, setTab] = useState<'stations' | 'detections'>('stations')
   const [stations, setStations] = useState<Station[]>([])
@@ -87,6 +86,12 @@ export default function CameraStations() {
   const [showModal, setShowModal] = useState(false)
   const [editStation, setEditStation] = useState<Partial<Station> | null>(null)
   const [saving, setSaving] = useState(false)
+
+  const statusLabel: Record<string, string> = {
+    pending:   t('cameras.statusPending'),
+    confirmed: t('cameras.statusConfirmed'),
+    rejected:  t('cameras.statusRejected'),
+  }
 
   useEffect(() => { loadStations() }, [])
   useEffect(() => { if (tab === 'detections') loadDetections() }, [tab, filterStation, filterStatus])
@@ -132,14 +137,14 @@ export default function CameraStations() {
       setShowModal(false)
       loadStations()
     } catch (e) {
-      alert('Lỗi lưu trạm. Kiểm tra lại thông tin.')
+      alert(t('cameras.saveError'))
     } finally {
       setSaving(false)
     }
   }
 
   async function deleteStation(s: Station) {
-    if (!confirm(`Xóa trạm "${s.name}"?`)) return
+    if (!confirm(t('cameras.confirmDelete', { name: s.name }))) return
     await api.delete(`/cameras/stations/${s.id}`)
     loadStations()
   }
@@ -149,17 +154,36 @@ export default function CameraStations() {
     loadDetections()
   }
 
+  const formFields = [
+    { label: t('cameras.fieldStationCode'), key: 'station_code', type: 'text' },
+    { label: t('cameras.fieldName'),        key: 'name',         type: 'text' },
+    { label: t('cameras.fieldProvince'),    key: 'province',     type: 'text' },
+    { label: t('cameras.fieldLat'),         key: 'latitude',     type: 'number' },
+    { label: t('cameras.fieldLon'),         key: 'longitude',    type: 'number' },
+    { label: t('cameras.fieldRtsp'),        key: 'rtsp_url',     type: 'text' },
+    { label: t('cameras.fieldPtz'),         key: 'ptz_url',      type: 'text' },
+    { label: t('cameras.fieldCamUsername'), key: 'cam_username', type: 'text' },
+    { label: t('cameras.fieldCamPassword'), key: 'cam_password', type: 'password' },
+    { label: t('cameras.fieldImageWidth'),  key: 'image_width',  type: 'number' },
+    { label: t('cameras.fieldImageHeight'), key: 'image_height', type: 'number' },
+    { label: t('cameras.fieldZoom'),        key: 'absolute_zoom',type: 'number' },
+    { label: t('cameras.fieldFov'),         key: 'field_of_view',type: 'number' },
+    { label: t('cameras.fieldTilt'),        key: 'tilt_angle',   type: 'number' },
+    { label: t('cameras.fieldCamHeight'),   key: 'cam_height_agl',type: 'number' },
+    { label: t('cameras.fieldGroundElev'),  key: 'ground_elevation', type: 'number' },
+  ]
+
   return (
     <div className="p-6 max-w-7xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-lg font-bold text-[#1e293b]">Trạm Camera & Phát hiện Cháy</h1>
-        <p className="text-xs text-[#64748b] mt-0.5">Quản lý trạm camera quan sát và xác nhận kết quả phát hiện cháy rừng từ AI</p>
+        <h1 className="text-lg font-bold text-[#1e293b]">{t('cameras.title')}</h1>
+        <p className="text-xs text-[#64748b] mt-0.5">{t('cameras.subtitle')}</p>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 bg-[#f1f5f9] p-1 rounded-lg w-fit">
-        {([['stations', 'Trạm Camera'], ['detections', 'Phát hiện Cháy']] as const).map(([key, label]) => (
+        {([['stations', t('cameras.tabStations')], ['detections', t('cameras.tabDetections')]] as const).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -176,14 +200,14 @@ export default function CameraStations() {
       {tab === 'stations' && (
         <>
           <div className="flex justify-between items-center mb-4">
-            <p className="text-sm text-[#64748b]">{stations.length} trạm</p>
+            <p className="text-sm text-[#64748b]">{t('cameras.stationCount', { count: stations.length })}</p>
             {isAdmin && (
               <button
                 onClick={openCreate}
                 className="flex items-center gap-1.5 px-4 py-2 bg-[#1565c0] text-white text-sm font-medium rounded-lg hover:bg-[#1251a3]"
               >
                 <span className="material-symbols-outlined text-base">add</span>
-                Thêm trạm
+                {t('cameras.addStation')}
               </button>
             )}
           </div>
@@ -193,7 +217,7 @@ export default function CameraStations() {
           ) : stations.length === 0 ? (
             <div className="text-center py-16 text-[#94a3b8]">
               <span className="material-symbols-outlined text-4xl mb-2 block">videocam_off</span>
-              Chưa có trạm camera nào
+              {t('cameras.noStations')}
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -206,7 +230,7 @@ export default function CameraStations() {
                       {s.province && <p className="text-xs text-[#64748b]">{s.province}</p>}
                     </div>
                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${s.is_active ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-slate-500 bg-slate-50 border-slate-200'}`}>
-                      {s.is_active ? 'Hoạt động' : 'Tắt'}
+                      {s.is_active ? t('cameras.statusActive') : t('cameras.statusInactive')}
                     </span>
                   </div>
 
@@ -231,10 +255,10 @@ export default function CameraStations() {
                   {isAdmin && (
                     <div className="flex gap-2 pt-1 border-t border-[#f1f5f9]">
                       <button onClick={() => openEdit(s)} className="flex-1 flex items-center justify-center gap-1 py-1.5 text-xs text-[#1565c0] hover:bg-blue-50 rounded-lg">
-                        <span className="material-symbols-outlined text-sm">edit</span> Sửa
+                        <span className="material-symbols-outlined text-sm">edit</span> {t('common.edit')}
                       </button>
                       <button onClick={() => deleteStation(s)} className="flex-1 flex items-center justify-center gap-1 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-lg">
-                        <span className="material-symbols-outlined text-sm">delete</span> Xóa
+                        <span className="material-symbols-outlined text-sm">delete</span> {t('common.delete')}
                       </button>
                     </div>
                   )}
@@ -252,7 +276,7 @@ export default function CameraStations() {
             <input
               value={filterStation}
               onChange={e => setFilterStation(e.target.value)}
-              placeholder="Mã trạm..."
+              placeholder={t('cameras.stationCodeFilter')}
               className="px-3 py-2 text-sm border border-[#e2e8f0] rounded-lg focus:outline-none focus:border-[#1565c0]"
             />
             <select
@@ -260,10 +284,10 @@ export default function CameraStations() {
               onChange={e => setFilterStatus(e.target.value)}
               className="px-3 py-2 text-sm border border-[#e2e8f0] rounded-lg focus:outline-none focus:border-[#1565c0]"
             >
-              <option value="">Tất cả trạng thái</option>
-              <option value="pending">Chờ xác nhận</option>
-              <option value="confirmed">Đã xác nhận</option>
-              <option value="rejected">Đã từ chối</option>
+              <option value="">{t('cameras.allStatuses')}</option>
+              <option value="pending">{t('cameras.statusPending')}</option>
+              <option value="confirmed">{t('cameras.statusConfirmed')}</option>
+              <option value="rejected">{t('cameras.statusRejected')}</option>
             </select>
             <button onClick={loadDetections} className="px-3 py-2 text-sm text-[#1565c0] border border-[#e2e8f0] rounded-lg hover:bg-blue-50">
               <span className="material-symbols-outlined text-base">refresh</span>
@@ -275,15 +299,19 @@ export default function CameraStations() {
           ) : detections.length === 0 ? (
             <div className="text-center py-16 text-[#94a3b8]">
               <span className="material-symbols-outlined text-4xl mb-2 block">local_fire_department</span>
-              Không có kết quả phát hiện nào
+              {t('cameras.noDetections')}
             </div>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-[#e2e8f0]">
               <table className="w-full text-sm">
                 <thead className="bg-[#f8fafc] text-[#64748b] text-xs uppercase tracking-wider">
                   <tr>
-                    {['#', 'Trạm', 'Thời gian', 'Độ tin cậy', 'Tọa độ cháy', 'Khoảng cách', 'Địa điểm', 'Trạng thái', ''].map(h => (
-                      <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
+                    {[
+                      t('cameras.colId'), t('cameras.colStation'), t('cameras.colTime'),
+                      t('cameras.colConfidence'), t('cameras.colFireCoord'),
+                      t('cameras.colDistance'), t('cameras.colLocation'), t('cameras.colStatus'), '',
+                    ].map((h, i) => (
+                      <th key={i} className="px-4 py-3 text-left font-medium">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -292,7 +320,7 @@ export default function CameraStations() {
                     <tr key={d.id} className="hover:bg-[#f8fafc]">
                       <td className="px-4 py-3 font-mono text-[#94a3b8] text-xs">{d.id}</td>
                       <td className="px-4 py-3 font-medium text-[#1e293b]">{d.station_code}</td>
-                      <td className="px-4 py-3 text-[#64748b] text-xs">{fmtDate(d.detected_at)}</td>
+                      <td className="px-4 py-3 text-[#64748b] text-xs">{fmtDate(d.detected_at, locale)}</td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded-full border text-xs font-medium ${
                           d.confidence >= 0.9 ? 'text-red-700 bg-red-50 border-red-200'
@@ -314,7 +342,7 @@ export default function CameraStations() {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded-full border text-xs font-medium ${STATUS_CLS[d.status] || ''}`}>
-                          {STATUS_VI[d.status] || d.status}
+                          {statusLabel[d.status] || d.status}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -324,13 +352,13 @@ export default function CameraStations() {
                               onClick={() => updateDetectionStatus(d.id, 'confirmed')}
                               className="px-2 py-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100"
                             >
-                              Xác nhận
+                              {t('cameras.btnConfirm')}
                             </button>
                             <button
                               onClick={() => updateDetectionStatus(d.id, 'rejected')}
                               className="px-2 py-1 text-xs bg-red-50 text-red-700 border border-red-200 rounded-lg hover:bg-red-100"
                             >
-                              Từ chối
+                              {t('cameras.btnReject')}
                             </button>
                           </div>
                         )}
@@ -350,7 +378,7 @@ export default function CameraStations() {
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-[#e2e8f0]">
               <h2 className="font-semibold text-[#1e293b]">
-                {editStation.id ? 'Chỉnh sửa trạm camera' : 'Thêm trạm camera mới'}
+                {editStation.id ? t('cameras.modalEdit') : t('cameras.modalCreate')}
               </h2>
               <button onClick={() => setShowModal(false)} className="text-[#94a3b8] hover:text-[#1e293b]">
                 <span className="material-symbols-outlined">close</span>
@@ -358,24 +386,7 @@ export default function CameraStations() {
             </div>
 
             <div className="p-6 grid grid-cols-2 gap-4">
-              {[
-                { label: 'Mã trạm *', key: 'station_code', type: 'text' },
-                { label: 'Tên trạm *', key: 'name', type: 'text' },
-                { label: 'Tỉnh/Thành', key: 'province', type: 'text' },
-                { label: 'Vĩ độ (lat) *', key: 'latitude', type: 'number' },
-                { label: 'Kinh độ (lon) *', key: 'longitude', type: 'number' },
-                { label: 'RTSP URL', key: 'rtsp_url', type: 'text' },
-                { label: 'PTZ URL', key: 'ptz_url', type: 'text' },
-                { label: 'Username camera', key: 'cam_username', type: 'text' },
-                { label: 'Password camera', key: 'cam_password', type: 'password' },
-                { label: 'Chiều rộng ảnh (px)', key: 'image_width', type: 'number' },
-                { label: 'Chiều cao ảnh (px)', key: 'image_height', type: 'number' },
-                { label: 'Absolute Zoom', key: 'absolute_zoom', type: 'number' },
-                { label: 'FOV (độ ngang)', key: 'field_of_view', type: 'number' },
-                { label: 'Góc ngẩng (tilt_angle)', key: 'tilt_angle', type: 'number' },
-                { label: 'Chiều cao AGL (m)', key: 'cam_height_agl', type: 'number' },
-                { label: 'Cao độ địa hình (m)', key: 'ground_elevation', type: 'number' },
-              ].map(({ label, key, type }) => (
+              {formFields.map(({ label, key, type }) => (
                 <div key={key} className={key === 'rtsp_url' || key === 'ptz_url' ? 'col-span-2' : ''}>
                   <label className="block text-xs text-[#64748b] mb-1">{label}</label>
                   <input
@@ -400,20 +411,20 @@ export default function CameraStations() {
                   onChange={e => setEditStation(prev => ({ ...prev!, is_active: e.target.checked }))}
                   className="w-4 h-4 text-[#1565c0]"
                 />
-                <label htmlFor="is_active" className="text-sm text-[#1e293b]">Đang hoạt động</label>
+                <label htmlFor="is_active" className="text-sm text-[#1e293b]">{t('cameras.fieldIsActive')}</label>
               </div>
             </div>
 
             <div className="flex gap-3 p-6 border-t border-[#e2e8f0] justify-end">
               <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-[#64748b] border border-[#e2e8f0] rounded-lg hover:bg-[#f8fafc]">
-                Hủy
+                {t('common.cancel')}
               </button>
               <button
                 onClick={saveStation}
                 disabled={saving}
                 className="px-4 py-2 text-sm bg-[#1565c0] text-white rounded-lg hover:bg-[#1251a3] disabled:opacity-50"
               >
-                {saving ? 'Đang lưu...' : 'Lưu'}
+                {saving ? t('cameras.saving') : t('common.save')}
               </button>
             </div>
           </div>
