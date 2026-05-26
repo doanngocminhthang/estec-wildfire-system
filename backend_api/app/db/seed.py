@@ -198,8 +198,9 @@ def seed_default_data() -> None:
         db.commit()
 
         # Seed admin user
-        if not db.query(User).filter(User.username == "admin").first():
-            admin_role = db.query(Role).filter(Role.name == "admin").first()
+        admin_role = db.query(Role).filter(Role.name == "admin").first()
+        existing_admin = db.query(User).filter(User.username == "admin").first()
+        if not existing_admin:
             admin = User(
                 username="admin",
                 email="admin@wildfire.local",
@@ -213,6 +214,10 @@ def seed_default_data() -> None:
             db.commit()
             logger.info("Admin user created: admin / Admin@123")
         else:
+            if admin_role and admin_role not in existing_admin.roles:
+                existing_admin.roles.append(admin_role)
+                db.commit()
+                logger.info("Admin role assigned to existing admin user")
             logger.info("Admin user already exists")
 
         # Seed ranger users

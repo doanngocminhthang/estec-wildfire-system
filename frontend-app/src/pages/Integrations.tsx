@@ -63,7 +63,7 @@ function SecretReveal({ label, value }: { label: string; value: string }) {
 
 // ---------- Tab: API Keys ----------
 
-function KeysTab({ t }: { t: (k: string) => string }) {
+function KeysTab() {
   const [keys, setKeys] = useState<APIKey[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -190,7 +190,7 @@ function KeysTab({ t }: { t: (k: string) => string }) {
 
 // ---------- Tab: Webhooks ----------
 
-function WebhooksTab({ t }: { t: (k: string) => string }) {
+function WebhooksTab() {
   const [webhooks, setWebhooks] = useState<WebhookItem[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -522,8 +522,8 @@ export default function Integrations() {
         </div>
 
         <div className="p-6">
-          {tab === 'keys'     && <KeysTab t={t} />}
-          {tab === 'webhooks' && <WebhooksTab t={t} />}
+          {tab === 'keys'     && <KeysTab />}
+          {tab === 'webhooks' && <WebhooksTab />}
           {tab === 'docs'     && <DocsTab />}
         </div>
       </div>
