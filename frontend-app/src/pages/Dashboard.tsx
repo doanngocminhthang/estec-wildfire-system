@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import dataApi from '../api/dataClient'
 import api from '../api/client'
 
@@ -59,16 +60,12 @@ const STATUS_STYLE: Record<string, string> = {
   containing:   'text-amber-600 bg-amber-50 border-amber-200',
   controlled:   'text-emerald-600 bg-emerald-50 border-emerald-200',
 }
-const STATUS_LABEL: Record<string, string> = {
-  uncontrolled: 'Chưa kiểm soát',
-  containing:   'Đang kiểm soát',
-  controlled:   'Đã kiểm soát',
-}
 const PRIORITY_COLOR: Record<string, string> = {
   critical: 'text-red-600', high: 'text-amber-600', medium: 'text-[#64748b]', low: 'text-emerald-600',
 }
 
 export default function Dashboard() {
+  const { t, i18n } = useTranslation()
   const [stats,     setStats]     = useState<Stats | null>(null)
   const [incidents, setIncidents] = useState<Incident[]>([])
   const [health,    setHealth]    = useState<Health | null>(null)
@@ -89,22 +86,23 @@ export default function Dashboard() {
     }).finally(() => setLoading(false))
   }, [])
 
-  const now = new Date().toLocaleDateString('vi-VN', {
+  const locale = i18n.language === 'en' ? 'en-US' : 'vi-VN'
+  const now = new Date().toLocaleDateString(locale, {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   })
 
   const systemServices = [
-    { label: 'Máy chủ API',    ok: health !== null },
-    { label: 'Cơ sở dữ liệu', ok: health?.database === 'connected' },
-    { label: 'Redis Cache',    ok: true },
-    { label: 'MQTT Broker',    ok: true },
+    { label: t('dashboard.apiServer'),  ok: health !== null },
+    { label: t('dashboard.database'),   ok: health?.database === 'connected' },
+    { label: 'Redis Cache',             ok: true },
+    { label: 'MQTT Broker',             ok: true },
   ]
 
   return (
     <div className="p-6 max-w-5xl space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="text-lg font-bold text-[#1e293b]">Bảng điều khiển tổng quan</h1>
+        <h1 className="text-lg font-bold text-[#1e293b]">{t('dashboard.title')}</h1>
         <p className="text-xs text-[#64748b] mt-0.5 capitalize">{now}</p>
       </div>
 
@@ -126,7 +124,7 @@ export default function Dashboard() {
                   <p className="text-xs mt-0.5 opacity-80 line-clamp-2">{b.body}</p>
                 </div>
                 <Link to="/bulletins" className="text-xs underline opacity-70 hover:opacity-100 flex-shrink-0">
-                  Xem thêm
+                  {t('common.viewMore')}
                 </Link>
               </div>
             )
@@ -143,17 +141,17 @@ export default function Dashboard() {
         </div>
       ) : stats ? (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          <StatCard icon="crisis_alert"  label="Tổng điểm cháy"       value={stats.total_incidents}      sub="từ đầu hệ thống"    iconColor="text-red-500"     iconBg="bg-red-50"    accent="text-red-600" />
-          <StatCard icon="sensors"       label="Thiết bị hoạt động"    value={stats.active_sensors}       sub="cảm biến / camera"  iconColor="text-emerald-500" iconBg="bg-emerald-50" />
-          <StatCard icon="analytics"     label="Độ tin cậy TB"         value={`${stats.avg_confidence}%`} sub="xác suất phát hiện" iconColor="text-blue-500"    iconBg="bg-blue-50" />
-          <StatCard icon="warning"       label="Nguy hiểm cực cao"     value={stats.extreme_count}        sub="confidence > 90%"   iconColor="text-red-400"     iconBg="bg-red-50"    accent="text-red-500" />
-          <StatCard icon="report"        label="Nguy hiểm cao"         value={stats.high_count}           sub="confidence 70–90%"  iconColor="text-amber-500"   iconBg="bg-amber-50"  accent="text-amber-600" />
-          <StatCard icon="info"          label="Nguy hiểm thấp"        value={stats.low_count}            sub="confidence < 70%"   iconColor="text-emerald-500" iconBg="bg-emerald-50" />
+          <StatCard icon="crisis_alert"  label={t('dashboard.totalHotspots')}  value={stats.total_incidents}       sub="from system start"   iconColor="text-red-500"     iconBg="bg-red-50"    accent="text-red-600" />
+          <StatCard icon="sensors"       label={t('dashboard.activeSensors')}   value={stats.active_sensors}        sub="sensor / camera"     iconColor="text-emerald-500" iconBg="bg-emerald-50" />
+          <StatCard icon="analytics"     label={t('dashboard.avgConfidence')}   value={`${stats.avg_confidence}%`}  sub="confidence > 90%"    iconColor="text-blue-500"    iconBg="bg-blue-50" />
+          <StatCard icon="warning"       label={t('dashboard.extremeDanger')}   value={stats.extreme_count}         sub="confidence > 90%"    iconColor="text-red-400"     iconBg="bg-red-50"    accent="text-red-500" />
+          <StatCard icon="report"        label={t('dashboard.highDanger')}      value={stats.high_count}            sub="confidence 70–90%"   iconColor="text-amber-500"   iconBg="bg-amber-50"  accent="text-amber-600" />
+          <StatCard icon="info"          label={t('dashboard.lowDanger')}       value={stats.low_count}             sub="confidence < 70%"    iconColor="text-emerald-500" iconBg="bg-emerald-50" />
         </div>
       ) : (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-700 flex items-center gap-2">
           <span className="material-symbols-outlined text-sm">warning</span>
-          Không thể kết nối backend. Kiểm tra server đang chạy chưa.
+          {t('dashboard.backendError')}
         </div>
       )}
 
@@ -165,10 +163,10 @@ export default function Dashboard() {
           <div className="flex items-center justify-between px-5 py-3 border-b border-[#f1f5f9] bg-[#f8fafc]">
             <h2 className="text-sm font-semibold text-[#1e293b] flex items-center gap-2">
               <span className="material-symbols-outlined text-[#1565c0] text-base">local_fire_department</span>
-              Sự cố gần đây
+              {t('dashboard.recentIncidents')}
             </h2>
             <Link to="/incidents" className="text-xs text-[#1565c0] hover:underline flex items-center gap-0.5">
-              Xem tất cả <span className="material-symbols-outlined text-sm">chevron_right</span>
+              {t('common.viewAll')} <span className="material-symbols-outlined text-sm">chevron_right</span>
             </Link>
           </div>
 
@@ -179,7 +177,7 @@ export default function Dashboard() {
               ))}
             </div>
           ) : incidents.length === 0 ? (
-            <div className="px-5 py-8 text-center text-xs text-[#94a3b8]">Chưa có sự cố nào</div>
+            <div className="px-5 py-8 text-center text-xs text-[#94a3b8]">{t('dashboard.noIncidents')}</div>
           ) : (
             <ul className="divide-y divide-[#f8fafc]">
               {incidents.map((inc) => (
@@ -188,7 +186,7 @@ export default function Dashboard() {
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-[10px] font-mono text-[#94a3b8]">{inc.incident_code}</span>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${STATUS_STYLE[inc.status] ?? 'text-[#64748b] bg-[#f1f5f9] border-[#e2e8f0]'}`}>
-                        {STATUS_LABEL[inc.status] ?? inc.status}
+                        {t(`status.${inc.status}`, { defaultValue: inc.status })}
                       </span>
                     </div>
                     <p className="text-xs font-medium text-[#1e293b] truncate">{inc.title}</p>
@@ -210,7 +208,7 @@ export default function Dashboard() {
           <div className="px-5 py-3 border-b border-[#f1f5f9] bg-[#f8fafc]">
             <h2 className="text-sm font-semibold text-[#1e293b] flex items-center gap-2">
               <span className="material-symbols-outlined text-[#1565c0] text-base">monitor_heart</span>
-              Trạng thái hệ thống
+              {t('dashboard.systemStatus')}
             </h2>
           </div>
           <div className="p-4 space-y-2">
@@ -220,15 +218,15 @@ export default function Dashboard() {
               }`}>
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${ok ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
                 <span className="flex-1">{label}</span>
-                <span className="font-medium">{ok ? 'Hoạt động' : 'Lỗi'}</span>
+                <span className="font-medium">{ok ? t('common.running') : t('common.error')}</span>
               </div>
             ))}
 
             {/* Uptime note */}
             <div className="mt-3 pt-3 border-t border-[#f1f5f9] text-center">
-              <p className="text-[10px] text-[#94a3b8]">Kiểm tra lần cuối</p>
+              <p className="text-[10px] text-[#94a3b8]">{t('dashboard.lastCheck')}</p>
               <p className="text-xs font-medium text-[#1e293b] mt-0.5">
-                {new Date().toLocaleTimeString('vi-VN')}
+                {new Date().toLocaleTimeString(locale)}
               </p>
             </div>
           </div>
@@ -240,14 +238,14 @@ export default function Dashboard() {
       <div className="bg-white border border-[#e2e8f0] rounded-xl p-5 shadow-sm">
         <h2 className="text-sm font-semibold text-[#1e293b] mb-3 flex items-center gap-2">
           <span className="material-symbols-outlined text-[#1565c0] text-base">bolt</span>
-          Truy cập nhanh
+          {t('dashboard.quickAccess')}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { to: '/map',       icon: 'map',                   label: 'Bản đồ',      color: 'text-blue-600',    bg: 'bg-blue-50'    },
-            { to: '/hotspots',  icon: 'crisis_alert',          label: 'Điểm cháy',   color: 'text-red-600',     bg: 'bg-red-50'     },
-            { to: '/incidents', icon: 'local_fire_department', label: 'Sự cố',       color: 'text-amber-600',   bg: 'bg-amber-50'   },
-            { to: '/analytics', icon: 'bar_chart',             label: 'Thống kê',    color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            { to: '/map',       icon: 'map',                   label: t('dashboard.viewMap'),       color: 'text-blue-600',    bg: 'bg-blue-50'    },
+            { to: '/hotspots',  icon: 'crisis_alert',          label: t('dashboard.viewHotspots'),  color: 'text-red-600',     bg: 'bg-red-50'     },
+            { to: '/incidents', icon: 'local_fire_department', label: t('dashboard.viewIncidents'), color: 'text-amber-600',   bg: 'bg-amber-50'   },
+            { to: '/analytics', icon: 'bar_chart',             label: t('nav.analytics'),           color: 'text-emerald-600', bg: 'bg-emerald-50' },
           ].map(({ to, icon, label, color, bg }) => (
             <Link key={to} to={to}
               className={`flex flex-col items-center gap-2 p-4 rounded-xl border border-[#e2e8f0] ${bg} hover:shadow-md transition-shadow`}>

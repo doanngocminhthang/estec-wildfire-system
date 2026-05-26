@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import api from '../api/client'
 
 interface User {
@@ -10,13 +11,6 @@ interface User {
   is_active: boolean
   created_at: string
   last_login?: string
-}
-
-
-const ROLE_META = {
-  admin:  { label: 'Quản trị viên', cls: 'bg-red-50 text-red-600 border-red-200',     icon: 'admin_panel_settings' },
-  ranger: { label: 'Kiểm lâm',     cls: 'bg-blue-50 text-blue-600 border-blue-200',   icon: 'forest' },
-  viewer: { label: 'Quan sát',     cls: 'bg-slate-50 text-slate-600 border-slate-200', icon: 'visibility' },
 }
 
 const SAMPLE_USERS: User[] = [
@@ -35,6 +29,7 @@ interface ModalProps {
 }
 
 function UserModal({ user, onClose, onSave }: ModalProps) {
+  const { t } = useTranslation()
   const [form, setForm] = useState({
     full_name: user?.full_name ?? '',
     email:     user?.email ?? '',
@@ -52,7 +47,7 @@ function UserModal({ user, onClose, onSave }: ModalProps) {
         {/* header */}
         <div className="px-6 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
           <h2 className="text-sm font-semibold text-[#1e293b]">
-            {user ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}
+            {user ? t('users.editUser') : t('users.addUser')}
           </h2>
           <button onClick={onClose} className="text-[#94a3b8] hover:text-[#64748b]">
             <span className="material-symbols-outlined text-xl">close</span>
@@ -62,10 +57,10 @@ function UserModal({ user, onClose, onSave }: ModalProps) {
         {/* body */}
         <div className="px-6 py-4 space-y-4">
           {[
-            { label: 'Họ và tên', key: 'full_name', type: 'text', placeholder: 'Nguyễn Văn A' },
-            { label: 'Tên đăng nhập', key: 'username', type: 'text', placeholder: 'username' },
-            { label: 'Email', key: 'email', type: 'email', placeholder: 'email@example.com' },
-            { label: user ? 'Mật khẩu mới (bỏ trống để giữ nguyên)' : 'Mật khẩu', key: 'password', type: 'password', placeholder: '••••••••' },
+            { label: t('users.fullName'), key: 'full_name', type: 'text', placeholder: 'Nguyễn Văn A' },
+            { label: t('users.username'), key: 'username',  type: 'text', placeholder: 'username' },
+            { label: t('users.email'),    key: 'email',     type: 'email', placeholder: 'email@example.com' },
+            { label: user ? t('users.newPassword') : t('users.password'), key: 'password', type: 'password', placeholder: '••••••••' },
           ].map(({ label, key, type, placeholder }) => (
             <div key={key}>
               <label className="block text-xs font-medium text-[#64748b] mb-1">{label}</label>
@@ -80,15 +75,15 @@ function UserModal({ user, onClose, onSave }: ModalProps) {
           ))}
 
           <div>
-            <label className="block text-xs font-medium text-[#64748b] mb-1">Vai trò</label>
+            <label className="block text-xs font-medium text-[#64748b] mb-1">{t('users.role')}</label>
             <select
               value={form.role}
               onChange={(e) => set('role', e.target.value)}
               className="w-full px-3 py-2 text-sm border border-[#e2e8f0] rounded-lg focus:outline-none focus:border-[#1565c0] text-[#1e293b] bg-white"
             >
-              <option value="admin">Quản trị viên</option>
-              <option value="ranger">Kiểm lâm</option>
-              <option value="viewer">Quan sát</option>
+              <option value="admin">{t('users.roles.admin')}</option>
+              <option value="ranger">{t('users.roles.ranger')}</option>
+              <option value="viewer">{t('users.roles.viewer')}</option>
             </select>
           </div>
 
@@ -100,20 +95,20 @@ function UserModal({ user, onClose, onSave }: ModalProps) {
             >
               <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
             </button>
-            <span className="text-xs text-[#64748b]">{form.is_active ? 'Tài khoản đang hoạt động' : 'Tài khoản bị khóa'}</span>
+            <span className="text-xs text-[#64748b]">{form.is_active ? t('users.accountActive') : t('users.accountLocked')}</span>
           </div>
         </div>
 
         {/* footer */}
         <div className="px-6 py-4 border-t border-[#e2e8f0] flex justify-end gap-3">
           <button onClick={onClose} className="px-4 py-2 text-sm text-[#64748b] border border-[#e2e8f0] rounded-lg hover:bg-[#f8fafc]">
-            Hủy
+            {t('common.cancel')}
           </button>
           <button
             onClick={() => { onSave(form); onClose() }}
             className="px-4 py-2 text-sm text-white bg-[#1565c0] rounded-lg hover:bg-[#1251a3] font-medium"
           >
-            {user ? 'Lưu thay đổi' : 'Tạo tài khoản'}
+            {user ? t('users.saveChanges') : t('users.createAccount')}
           </button>
         </div>
       </div>
@@ -122,12 +117,19 @@ function UserModal({ user, onClose, onSave }: ModalProps) {
 }
 
 export default function Users() {
+  const { t } = useTranslation()
   const [users, setUsers]       = useState<User[]>([])
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
   const [roleFilter, setRole]   = useState('')
   const [modal, setModal]       = useState<'create' | User | null>(null)
   const [deleteTarget, setDel]  = useState<User | null>(null)
+
+  const ROLE_META = {
+    admin:  { label: t('users.roles.admin'),  cls: 'bg-red-50 text-red-600 border-red-200',     icon: 'admin_panel_settings' },
+    ranger: { label: t('users.roles.ranger'), cls: 'bg-blue-50 text-blue-600 border-blue-200',   icon: 'forest' },
+    viewer: { label: t('users.roles.viewer'), cls: 'bg-slate-50 text-slate-600 border-slate-200', icon: 'visibility' },
+  }
 
   useEffect(() => {
     api.get('/users')
@@ -179,20 +181,38 @@ export default function Users() {
     active: users.filter((u) => u.is_active).length,
   }
 
+  const permRoles = [
+    {
+      key: 'admin' as const,
+      label: t('users.roles.admin'), icon: 'admin_panel_settings', color: 'text-red-600',
+      perms: t('users.perms.admin', { returnObjects: true }) as string[],
+    },
+    {
+      key: 'ranger' as const,
+      label: t('users.roles.ranger'), icon: 'forest', color: 'text-blue-600',
+      perms: t('users.perms.ranger', { returnObjects: true }) as string[],
+    },
+    {
+      key: 'viewer' as const,
+      label: t('users.roles.viewer'), icon: 'visibility', color: 'text-slate-600',
+      perms: t('users.perms.viewer', { returnObjects: true }) as string[],
+    },
+  ]
+
   return (
     <div className="p-6 max-w-6xl">
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-lg font-bold text-[#1e293b]">Quản lý người dùng</h1>
-          <p className="text-xs text-[#64748b] mt-0.5">Phân quyền và quản lý tài khoản hệ thống</p>
+          <h1 className="text-lg font-bold text-[#1e293b]">{t('users.title')}</h1>
+          <p className="text-xs text-[#64748b] mt-0.5">{t('users.subtitle')}</p>
         </div>
         <button
           onClick={() => setModal('create')}
           className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-[#1565c0] rounded-lg hover:bg-[#1251a3] font-medium shadow-sm"
         >
           <span className="material-symbols-outlined text-base">person_add</span>
-          Thêm người dùng
+          {t('users.newUser')}
         </button>
       </div>
 
@@ -200,10 +220,10 @@ export default function Users() {
       {!loading && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[
-            { label: 'Quản trị viên', count: counts.admin,  icon: 'admin_panel_settings', color: 'text-red-600',     bg: 'bg-red-50' },
-            { label: 'Kiểm lâm',      count: counts.ranger, icon: 'forest',               color: 'text-blue-600',    bg: 'bg-blue-50' },
-            { label: 'Quan sát',       count: counts.viewer, icon: 'visibility',            color: 'text-slate-600',   bg: 'bg-slate-50' },
-            { label: 'Đang hoạt động', count: counts.active, icon: 'check_circle',          color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            { label: t('users.roles.admin'),  count: counts.admin,  icon: 'admin_panel_settings', color: 'text-red-600',     bg: 'bg-red-50' },
+            { label: t('users.roles.ranger'), count: counts.ranger, icon: 'forest',               color: 'text-blue-600',    bg: 'bg-blue-50' },
+            { label: t('users.roles.viewer'), count: counts.viewer, icon: 'visibility',            color: 'text-slate-600',   bg: 'bg-slate-50' },
+            { label: t('users.active'),       count: counts.active, icon: 'check_circle',          color: 'text-emerald-600', bg: 'bg-emerald-50' },
           ].map(({ label, count, icon, color, bg }) => (
             <div key={label} className={`${bg} border border-[#e2e8f0] rounded-xl p-4 flex items-center gap-3`}>
               <span className={`material-symbols-outlined ${color} text-2xl`}>{icon}</span>
@@ -223,7 +243,7 @@ export default function Users() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm theo tên, username, email..."
+            placeholder={t('users.searchPlaceholder')}
             className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-[#e2e8f0] rounded-lg focus:outline-none focus:border-[#1565c0] text-[#1e293b]"
           />
         </div>
@@ -232,12 +252,12 @@ export default function Users() {
           onChange={(e) => setRole(e.target.value)}
           className="bg-white border border-[#e2e8f0] text-sm text-[#1e293b] rounded-lg px-3 py-2 focus:outline-none focus:border-[#1565c0]"
         >
-          <option value="">Tất cả vai trò</option>
-          <option value="admin">Quản trị viên</option>
-          <option value="ranger">Kiểm lâm</option>
-          <option value="viewer">Quan sát</option>
+          <option value="">{t('users.allRoles')}</option>
+          <option value="admin">{t('users.roles.admin')}</option>
+          <option value="ranger">{t('users.roles.ranger')}</option>
+          <option value="viewer">{t('users.roles.viewer')}</option>
         </select>
-        <span className="text-xs text-[#94a3b8] self-center">{filtered.length} người dùng</span>
+        <span className="text-xs text-[#94a3b8] self-center">{filtered.length} {t('common.results')}</span>
       </div>
 
       {/* Table */}
@@ -245,7 +265,7 @@ export default function Users() {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
-              {['Người dùng', 'Vai trò', 'Email', 'Trạng thái', 'Đăng nhập cuối', 'Thao tác'].map((h) => (
+              {[t('users.colUser'), t('users.role'), t('users.email'), t('common.status'), t('users.colLastLogin'), t('common.actions')].map((h) => (
                 <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-[#64748b] whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -260,7 +280,7 @@ export default function Users() {
                 </tr>
               ))
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-[#94a3b8] text-xs">Không có dữ liệu</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-[#94a3b8] text-xs">{t('common.noData')}</td></tr>
             ) : (
               filtered.map((u) => {
                 const rm = ROLE_META[u.role]
@@ -300,7 +320,7 @@ export default function Users() {
                         }`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                        {u.is_active ? 'Hoạt động' : 'Đã khóa'}
+                        {u.is_active ? t('users.statusActive') : t('users.statusLocked')}
                       </button>
                     </td>
                     {/* Last login */}
@@ -313,14 +333,14 @@ export default function Users() {
                         <button
                           onClick={() => setModal(u)}
                           className="p-1.5 rounded hover:bg-[#f1f5f9] text-[#64748b] hover:text-[#1565c0] transition-colors"
-                          title="Chỉnh sửa"
+                          title={t('common.edit')}
                         >
                           <span className="material-symbols-outlined text-base">edit</span>
                         </button>
                         <button
                           onClick={() => setDel(u)}
                           className="p-1.5 rounded hover:bg-red-50 text-[#64748b] hover:text-red-500 transition-colors"
-                          title="Xóa"
+                          title={t('common.delete')}
                         >
                           <span className="material-symbols-outlined text-base">delete</span>
                         </button>
@@ -338,23 +358,10 @@ export default function Users() {
       <div className="mt-4 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-4">
         <h3 className="text-xs font-semibold text-[#64748b] mb-3 flex items-center gap-1.5">
           <span className="material-symbols-outlined text-sm">info</span>
-          Phân quyền theo vai trò
+          {t('users.permLegendTitle')}
         </h3>
         <div className="grid grid-cols-3 gap-4">
-          {[
-            {
-              role: 'admin', label: 'Quản trị viên', icon: 'admin_panel_settings', color: 'text-red-600',
-              perms: ['Toàn quyền hệ thống', 'Quản lý người dùng', 'Xem & xử lý mọi sự cố', 'Cấu hình hệ thống'],
-            },
-            {
-              role: 'ranger', label: 'Kiểm lâm', icon: 'forest', color: 'text-blue-600',
-              perms: ['Xem bản đồ & điểm cháy', 'Tạo & cập nhật sự cố', 'Nhận thông báo khẩn', 'Xem báo cáo'],
-            },
-            {
-              role: 'viewer', label: 'Quan sát', icon: 'visibility', color: 'text-slate-600',
-              perms: ['Xem bản đồ (chỉ đọc)', 'Xem danh sách sự cố', 'Xem thống kê', 'Không thể chỉnh sửa'],
-            },
-          ].map(({ label, icon, color, perms }) => (
+          {permRoles.map(({ label, icon, color, perms }) => (
             <div key={label}>
               <p className={`text-xs font-medium ${color} flex items-center gap-1 mb-2`}>
                 <span className="material-symbols-outlined text-sm">{icon}</span>
@@ -391,22 +398,22 @@ export default function Users() {
                 <span className="material-symbols-outlined text-red-500">delete</span>
               </div>
               <div>
-                <p className="text-sm font-semibold text-[#1e293b]">Xóa người dùng</p>
+                <p className="text-sm font-semibold text-[#1e293b]">{t('users.deleteTitle')}</p>
                 <p className="text-xs text-[#64748b]">{deleteTarget.full_name}</p>
               </div>
             </div>
             <p className="text-xs text-[#64748b] mb-4">
-              Bạn có chắc chắn muốn xóa tài khoản <strong>{deleteTarget.username}</strong>? Hành động này không thể hoàn tác.
+              {t('users.deleteConfirm', { username: deleteTarget.username })}
             </p>
             <div className="flex justify-end gap-3">
               <button onClick={() => setDel(null)} className="px-4 py-2 text-sm text-[#64748b] border border-[#e2e8f0] rounded-lg hover:bg-[#f8fafc]">
-                Hủy
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
                 className="px-4 py-2 text-sm text-white bg-red-500 rounded-lg hover:bg-red-600 font-medium"
               >
-                Xóa
+                {t('common.delete')}
               </button>
             </div>
           </div>

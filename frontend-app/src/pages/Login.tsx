@@ -1,8 +1,10 @@
 import { useState, useRef, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../store/authStore'
 
 export default function Login() {
+  const { t } = useTranslation()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError]       = useState('')
@@ -19,7 +21,7 @@ export default function Login() {
       await login(username, password)
       navigate('/dashboard')
     } catch {
-      setError('Tên đăng nhập hoặc mật khẩu không chính xác.')
+      setError(t('auth.loginFail'))
       // shake animation
       const card = cardRef.current
       if (card) {
@@ -45,12 +47,11 @@ export default function Login() {
              style={{ backgroundColor: 'rgba(46,107,62,0.75)', backdropFilter: 'blur(2px)' }}>
           <div className="max-w-xl">
             <h2 className="text-3xl lg:text-4xl font-bold text-white mb-3 leading-tight">
-              Bảo vệ rừng là bảo vệ cuộc sống của chúng ta
+              {t('auth.loginSlogan')}
             </h2>
             <div className="w-16 h-1 bg-[#708238] mb-6" />
             <p className="text-lg text-white/90 leading-relaxed">
-              Chi cục Kiểm lâm Thanh Hóa cam kết ứng dụng công nghệ hiện đại
-              trong việc giám sát và phòng cháy chữa cháy rừng trên toàn địa bàn tỉnh.
+              {t('auth.loginDesc')}
             </p>
           </div>
         </div>
@@ -82,7 +83,7 @@ export default function Login() {
             {/* Tên đăng nhập */}
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-[#42474e]" htmlFor="username">
-                Tên đăng nhập
+                {t('auth.username')}
               </label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#73777f] text-xl pointer-events-none">
@@ -95,7 +96,7 @@ export default function Login() {
                   onChange={(e) => setUsername(e.target.value)}
                   required
                   autoFocus
-                  placeholder="Nhập tên đăng nhập"
+                  placeholder={t('auth.usernamePlaceholder')}
                   className="w-full pl-10 pr-4 py-3 bg-[#f8f9fb] border border-[#c2c7cf] rounded transition-all outline-none text-sm text-[#191c1e] placeholder-[#73777f]"
                   style={{ focusBorderColor: '#2E6B3E' } as React.CSSProperties}
                   onFocus={(e) => { e.target.style.borderColor = '#2E6B3E'; e.target.style.boxShadow = '0 0 0 2px rgba(46,107,62,0.2)' }}
@@ -107,7 +108,7 @@ export default function Login() {
             {/* Mật khẩu */}
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-[#42474e]" htmlFor="password">
-                Mật khẩu
+                {t('auth.password')}
               </label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#73777f] text-xl pointer-events-none">
@@ -132,10 +133,10 @@ export default function Login() {
               <label className="flex items-center gap-2 cursor-pointer group">
                 <input type="checkbox" className="w-4 h-4 rounded border-[#c2c7cf] accent-[#708238]" />
                 <span className="text-sm text-[#42474e] group-hover:text-[#2E6B3E] transition-colors">
-                  Ghi nhớ đăng nhập
+                  {t('auth.rememberMe')}
                 </span>
               </label>
-              <a href="#" className="text-sm text-[#708238] hover:underline">Quên mật khẩu?</a>
+              <Link to="/forgot-password" className="text-sm text-[#708238] hover:underline">{t('auth.forgotPassword')}</Link>
             </div>
 
             {/* Lỗi */}
@@ -158,11 +159,11 @@ export default function Login() {
               {loading ? (
                 <>
                   <span className="material-symbols-outlined animate-spin text-xl">progress_activity</span>
-                  Đang xác thực...
+                  {t('auth.authenticating')}
                 </>
               ) : (
                 <>
-                  ĐĂNG NHẬP
+                  {t('auth.loginBtn')}
                   <span className="material-symbols-outlined text-xl">login</span>
                 </>
               )}
@@ -173,11 +174,7 @@ export default function Login() {
           <div className="mt-6 pt-6 border-t border-[#c2c7cf] flex justify-center gap-6 text-[#42474e]">
             <button className="flex items-center gap-1 text-xs font-semibold hover:text-[#2E6B3E] transition-colors">
               <span className="material-symbols-outlined text-lg">security</span>
-              Xác thực 2 lớp
-            </button>
-            <button className="flex items-center gap-1 text-xs font-semibold hover:text-[#2E6B3E] transition-colors">
-              <span className="material-symbols-outlined text-lg">language</span>
-              Tiếng Việt
+              {t('auth.twoFactor')}
             </button>
           </div>
         </div>
@@ -185,11 +182,11 @@ export default function Login() {
         {/* Footer ngoài card */}
         <footer className="mt-8 text-center">
           <p className="text-xs text-[#42474e] opacity-70">
-            © {new Date().getFullYear()} Chi cục Kiểm lâm Thanh Hóa. Bảo lưu mọi quyền.
+            © {new Date().getFullYear()} {t('auth.copyright')}
           </p>
           <div className="mt-2 flex gap-4 justify-center">
-            <a href="#" className="text-xs text-[#73777f] hover:text-[#708238] underline decoration-dotted">Quy định bảo mật</a>
-            <a href="#" className="text-xs text-[#73777f] hover:text-[#708238] underline decoration-dotted">Hướng dẫn sử dụng</a>
+            <a href="#" className="text-xs text-[#73777f] hover:text-[#708238] underline decoration-dotted">{t('auth.privacyPolicy')}</a>
+            <a href="#" className="text-xs text-[#73777f] hover:text-[#708238] underline decoration-dotted">{t('auth.userGuide')}</a>
           </div>
         </footer>
       </section>

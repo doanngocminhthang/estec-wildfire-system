@@ -20,6 +20,28 @@ class Settings(BaseSettings):
     mqtt_host: str = "localhost"
     mqtt_port: int = 1883
 
+    # NASA FIRMS satellite hotspot feed
+    # Register free at: https://firms.modaps.eosdis.nasa.gov/api/
+    firms_map_key: str = ""
+    # Bounding box for Thanh Hoa province: west,south,east,north
+    firms_bbox: str = "104.2,19.0,106.5,20.8"
+    # Auto-sync interval in hours (0 = disabled)
+    firms_sync_hours: int = 3
+
+    # Camera AI integration
+    # Path to GeoTIFF DEM file for fire coordinate calculation (optional)
+    dem_path: str = ""
+    # Path to admin boundary shapefile for commune/district lookup (optional)
+    shapefile_path: str = ""
+
+    # SMTP for fire alert emails
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_sender_email: str = ""
+    smtp_sender_password: str = ""
+    # Comma-separated list of recipient emails
+    alert_email_recipients: str = ""
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False)
 
 

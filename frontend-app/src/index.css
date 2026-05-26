@@ -58,3 +58,13 @@
 .wf-row   { display: flex; justify-content: space-between; gap: 12px; }
 .wf-row span { color: #64748b; white-space: nowrap; }
 .wf-row b { text-align: right; }
+.wf-divider { border: none; border-top: 1px solid #f1f5f9; margin: 8px 0; }
+.wf-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-top: 6px; font-size: 11px; font-weight: 600;
+  color: #1565c0; text-decoration: none;
+  padding: 4px 8px; border-radius: 6px;
+  background: #eff6ff; border: 1px solid #bfdbfe;
+  transition: background 0.15s;
+}
+.wf-link:hover { background: #dbeafe; }

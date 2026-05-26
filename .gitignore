@@ -20,3 +20,10 @@ __pycache__/
 Wildfire---Web---HoanVo/
 frontend-code-template/
 
+# Claude Code & CodeGraph (tool artifacts)
+.claude/
+**/.codegraph/
+
+# Test / scratch data
+data/test.geojson
+

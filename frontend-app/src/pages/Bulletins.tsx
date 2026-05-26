@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import api from '../api/client'
 import { useAuthStore } from '../store/authStore'
 
@@ -12,23 +13,20 @@ interface Bulletin {
   created_at: string
 }
 
-const PRIORITY_CONFIG = {
+const PRIORITY_STYLES = {
   critical: {
-    label: 'Khẩn cấp',
     badge: 'bg-red-100 text-red-700 border border-red-300',
     card: 'border-l-4 border-l-red-500 bg-red-50',
     icon: 'emergency',
     iconColor: 'text-red-500',
   },
   warning: {
-    label: 'Cảnh báo',
     badge: 'bg-amber-100 text-amber-700 border border-amber-300',
     card: 'border-l-4 border-l-amber-500 bg-amber-50',
     icon: 'warning',
     iconColor: 'text-amber-500',
   },
   info: {
-    label: 'Thông tin',
     badge: 'bg-blue-100 text-blue-700 border border-blue-300',
     card: 'border-l-4 border-l-blue-500 bg-blue-50',
     icon: 'info',
@@ -44,6 +42,7 @@ function fmt(dt: string) {
 }
 
 export default function Bulletins() {
+  const { t } = useTranslation()
   const { hasRole } = useAuthStore()
   const isAdmin = hasRole('admin')
 
@@ -62,18 +61,18 @@ export default function Bulletins() {
       const res = await api.get<Bulletin[]>('/bulletins/')
       setBulletins(res.data)
     } catch {
-      setError('Không thể tải thông báo')
+      setError(t('bulletins.loadError'))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => { load() }, [load])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.title.trim() || !form.body.trim()) {
-      setFormError('Vui lòng điền đầy đủ tiêu đề và nội dung')
+      setFormError(t('bulletins.requiredError'))
       return
     }
     setSubmitting(true)
@@ -84,19 +83,19 @@ export default function Bulletins() {
       setShowForm(false)
       load()
     } catch {
-      setFormError('Không thể đăng thông báo. Thử lại sau.')
+      setFormError(t('bulletins.postError'))
     } finally {
       setSubmitting(false)
     }
   }
 
   async function handleDelete(id: number) {
-    if (!confirm('Ẩn thông báo này?')) return
+    if (!confirm(t('bulletins.hideConfirm'))) return
     try {
       await api.delete(`/bulletins/${id}`)
       setBulletins(prev => prev.filter(b => b.id !== id))
     } catch {
-      alert('Không thể xóa thông báo')
+      alert(t('bulletins.hideError'))
     }
   }
 
@@ -105,8 +104,8 @@ export default function Bulletins() {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
         <div>
-          <h1 className="text-lg font-semibold text-gray-900">Bảng tin thông báo</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Thông báo chính thức từ ban chỉ huy</p>
+          <h1 className="text-lg font-semibold text-gray-900">{t('bulletins.title')}</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{t('bulletins.subtitle')}</p>
         </div>
         {isAdmin && (
           <button
@@ -114,7 +113,7 @@ export default function Bulletins() {
             className="flex items-center gap-2 px-3 py-2 bg-[#1565c0] text-white rounded-lg text-sm hover:bg-[#0d47a1] transition-colors"
           >
             <span className="material-symbols-outlined text-base">{showForm ? 'close' : 'add'}</span>
-            {showForm ? 'Hủy' : 'Đăng thông báo'}
+            {showForm ? t('common.cancel') : t('bulletins.postBulletin')}
           </button>
         )}
       </div>
@@ -123,11 +122,11 @@ export default function Bulletins() {
       {showForm && (
         <div className="px-6 py-4 bg-white border-b border-gray-200">
           <form onSubmit={handleSubmit} className="max-w-2xl space-y-3">
-            <h2 className="text-sm font-semibold text-gray-700 mb-3">Thông báo mới</h2>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('bulletins.formTitle')}</h2>
             <div className="flex gap-3">
               <input
                 type="text"
-                placeholder="Tiêu đề thông báo *"
+                placeholder={t('bulletins.titlePlaceholder')}
                 value={form.title}
                 onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                 className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -138,13 +137,13 @@ export default function Bulletins() {
                 onChange={e => setForm(f => ({ ...f, priority: e.target.value as Bulletin['priority'] }))}
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="info">Thông tin</option>
-                <option value="warning">Cảnh báo</option>
-                <option value="critical">Khẩn cấp</option>
+                <option value="info">{t('bulletins.priorities.info')}</option>
+                <option value="warning">{t('bulletins.priorities.warning')}</option>
+                <option value="critical">{t('bulletins.priorities.critical')}</option>
               </select>
             </div>
             <textarea
-              placeholder="Nội dung thông báo *"
+              placeholder={t('bulletins.bodyPlaceholder')}
               value={form.body}
               onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
               rows={4}
@@ -157,14 +156,14 @@ export default function Bulletins() {
                 disabled={submitting}
                 className="px-4 py-2 bg-[#1565c0] text-white rounded-lg text-sm hover:bg-[#0d47a1] disabled:opacity-50 transition-colors"
               >
-                {submitting ? 'Đang đăng...' : 'Đăng thông báo'}
+                {submitting ? t('bulletins.submitting') : t('bulletins.postBulletin')}
               </button>
               <button
                 type="button"
                 onClick={() => { setShowForm(false); setFormError('') }}
                 className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg text-sm hover:bg-gray-50 transition-colors"
               >
-                Hủy
+                {t('common.cancel')}
               </button>
             </div>
           </form>
@@ -183,28 +182,28 @@ export default function Bulletins() {
         ) : bulletins.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-gray-400 gap-2">
             <span className="material-symbols-outlined text-5xl">campaign</span>
-            <p className="text-sm">Chưa có thông báo nào</p>
+            <p className="text-sm">{t('bulletins.emptyState')}</p>
           </div>
         ) : (
           <div className="space-y-3 max-w-3xl">
             {bulletins.map(b => {
-              const cfg = PRIORITY_CONFIG[b.priority]
+              const styles = PRIORITY_STYLES[b.priority]
               return (
-                <div key={b.id} className={`bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm ${cfg.card}`}>
+                <div key={b.id} className={`bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm ${styles.card}`}>
                   <div className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <span className={`material-symbols-outlined text-xl flex-shrink-0 ${cfg.iconColor}`}>{cfg.icon}</span>
+                        <span className={`material-symbols-outlined text-xl flex-shrink-0 ${styles.iconColor}`}>{styles.icon}</span>
                         <h3 className="text-sm font-semibold text-gray-900 leading-tight">{b.title}</h3>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cfg.badge}`}>
-                          {cfg.label}
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${styles.badge}`}>
+                          {t(`bulletins.priorities.${b.priority}`)}
                         </span>
                         {isAdmin && (
                           <button
                             onClick={() => handleDelete(b.id)}
-                            title="Ẩn thông báo"
+                            title={t('common.delete')}
                             className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                           >
                             <span className="material-symbols-outlined text-base">delete</span>
@@ -216,7 +215,7 @@ export default function Bulletins() {
                     <div className="mt-3 flex items-center gap-3 text-xs text-gray-400">
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-xs">person</span>
-                        {b.created_by_username ?? 'Hệ thống'}
+                        {b.created_by_username ?? t('bulletins.system')}
                       </span>
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-xs">schedule</span>

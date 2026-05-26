@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -95,6 +96,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
 
 // ── Export menu ───────────────────────────────────────────────────────────────
 function ExportMenu({ onCSV, onPrint }: { onCSV: () => void; onPrint: () => void }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -113,7 +115,7 @@ function ExportMenu({ onCSV, onPrint }: { onCSV: () => void; onPrint: () => void
         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#1565c0] rounded-lg hover:bg-[#1251a3] transition-colors"
       >
         <span className="material-symbols-outlined text-sm">download</span>
-        Xuất báo cáo
+        {t('common.exportReport')}
         <span className="material-symbols-outlined text-xs">{open ? 'expand_less' : 'expand_more'}</span>
       </button>
       {open && (
@@ -123,14 +125,14 @@ function ExportMenu({ onCSV, onPrint }: { onCSV: () => void; onPrint: () => void
             className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-[#1e293b] hover:bg-[#f8fafc] transition-colors"
           >
             <span className="material-symbols-outlined text-sm text-emerald-600">table_view</span>
-            Xuất CSV / Excel
+            {t('common.exportCSV')}
           </button>
           <button
             onClick={() => { onPrint(); setOpen(false) }}
             className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-[#1e293b] hover:bg-[#f8fafc] transition-colors border-t border-[#f1f5f9]"
           >
             <span className="material-symbols-outlined text-sm text-red-500">picture_as_pdf</span>
-            In / Xuất PDF
+            {t('common.exportPDF')}
           </button>
         </div>
       )}
@@ -140,6 +142,7 @@ function ExportMenu({ onCSV, onPrint }: { onCSV: () => void; onPrint: () => void
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function Analytics() {
+  const { t } = useTranslation()
   const [stats, setStats]     = useState<HotspotStats | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -179,8 +182,8 @@ export default function Analytics() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-lg font-bold text-[#1e293b]">Thống kê & Phân tích</h1>
-          <p className="text-xs text-[#64748b] mt-0.5">Tổng hợp dữ liệu cháy rừng tỉnh Thanh Hóa — năm 2025</p>
+          <h1 className="text-lg font-bold text-[#1e293b]">{t('analytics.title')}</h1>
+          <p className="text-xs text-[#64748b] mt-0.5">{t('analytics.subtitle')} — {t('analytics.inYear')} 2025</p>
         </div>
         <ExportMenu
           onCSV={exportCSV}
@@ -190,14 +193,14 @@ export default function Analytics() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon="local_fire_department" label="Tổng điểm cháy"   value={loading ? '—' : (stats?.total_incidents ?? totalFires)}
-          sub="trong năm 2025" iconBg="bg-red-50" iconColor="text-red-500" accent="text-red-600" />
-        <StatCard icon="landscape"             label="Diện tích cháy"   value={`${totalArea} ha`}
-          sub="ước tính tổng cộng" iconBg="bg-amber-50" iconColor="text-amber-500" accent="text-amber-600" />
-        <StatCard icon="analytics"             label="Độ tin cậy TB"    value={loading ? '—' : `${stats?.avg_confidence ?? 82}%`}
-          sub="xác suất phát hiện" iconBg="bg-blue-50" iconColor="text-blue-500" />
-        <StatCard icon="sensors"               label="Cảm biến hoạt động" value={loading ? '—' : (stats?.active_sensors ?? 12)}
-          sub="camera + IoT" iconBg="bg-emerald-50" iconColor="text-emerald-500" />
+        <StatCard icon="local_fire_department" label={t('analytics.totalFires')}    value={loading ? '—' : (stats?.total_incidents ?? totalFires)}
+          sub={`${t('analytics.inYear')} 2025`} iconBg="bg-red-50" iconColor="text-red-500" accent="text-red-600" />
+        <StatCard icon="landscape"             label={t('analytics.burnArea')}       value={`${totalArea} ha`}
+          sub={t('analytics.estTotal')} iconBg="bg-amber-50" iconColor="text-amber-500" accent="text-amber-600" />
+        <StatCard icon="analytics"             label={t('analytics.avgConfidence')}  value={loading ? '—' : `${stats?.avg_confidence ?? 82}%`}
+          sub={t('analytics.detectionProb')} iconBg="bg-blue-50" iconColor="text-blue-500" />
+        <StatCard icon="sensors"               label={t('analytics.activeSensors')} value={loading ? '—' : (stats?.active_sensors ?? 12)}
+          sub={t('analytics.cameraIoT')} iconBg="bg-emerald-50" iconColor="text-emerald-500" />
       </div>
 
       {/* Charts row 1 */}
@@ -205,28 +208,28 @@ export default function Analytics() {
 
         {/* Bar chart — điểm cháy theo tháng */}
         <div className="lg:col-span-2">
-          <Section title="Số điểm cháy theo tháng" icon="bar_chart">
+          <Section title={t('analytics.firesByMonth')} icon="bar_chart">
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={MONTHLY_DATA} barSize={18}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
                 <Tooltip content={<ChartTooltip />} />
-                <Bar dataKey="diem_chay" name="Điểm cháy" fill="#ef4444" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="diem_chay" name={t('analytics.firePoints')} fill="#ef4444" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Section>
         </div>
 
         {/* Pie — trạng thái sự cố */}
-        <Section title="Trạng thái sự cố" icon="pie_chart">
+        <Section title={t('analytics.incidentStatus')} icon="pie_chart">
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie data={STATUS_DATA} dataKey="value" cx="50%" cy="45%"
                 innerRadius={50} outerRadius={75} paddingAngle={3}>
                 {STATUS_DATA.map((d) => <Cell key={d.name} fill={d.color} />)}
               </Pie>
-              <Tooltip formatter={(v) => [`${v} sự cố`, '']} />
+              <Tooltip formatter={(v) => [`${v} ${t('analytics.incidents')}`, '']} />
               <Legend iconType="circle" iconSize={8}
                 formatter={(v) => <span style={{ fontSize: 11, color: '#64748b' }}>{v}</span>} />
             </PieChart>
@@ -239,7 +242,7 @@ export default function Analytics() {
 
         {/* Area — diện tích cháy */}
         <div className="lg:col-span-2">
-          <Section title="Diện tích cháy ước tính (ha) theo tháng" icon="area_chart">
+          <Section title={t('analytics.burnAreaByMonth')} icon="area_chart">
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={MONTHLY_DATA}>
                 <defs>
@@ -252,7 +255,7 @@ export default function Analytics() {
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
                 <Tooltip content={<ChartTooltip />} />
-                <Area type="monotone" dataKey="dien_tich" name="Diện tích (ha)"
+                <Area type="monotone" dataKey="dien_tich" name={t('analytics.burnedArea')}
                   stroke="#f59e0b" strokeWidth={2} fill="url(#areaGrad)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -260,14 +263,14 @@ export default function Analytics() {
         </div>
 
         {/* Bar horizontal — theo khu vực */}
-        <Section title="Điểm cháy theo huyện" icon="map">
+        <Section title={t('analytics.firesByDistrict')} icon="map">
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={REGION_DATA} layout="vertical" barSize={12}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
               <XAxis type="number" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
               <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
               <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="value" name="Điểm cháy" fill="#1565c0" radius={[0, 3, 3, 0]} />
+              <Bar dataKey="value" name={t('analytics.firePoints')} fill="#1565c0" radius={[0, 3, 3, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Section>
@@ -275,12 +278,12 @@ export default function Analytics() {
 
       {/* Mức độ nguy hiểm */}
       {stats && (
-        <Section title="Phân bố mức độ nguy hiểm" icon="warning">
+        <Section title={t('analytics.dangerDistribution')} icon="warning">
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: 'Cực cao (>90%)',  value: stats.extreme_count, color: 'bg-red-500',   bar: 'bg-red-100', pct: Math.round(stats.extreme_count / stats.total_incidents * 100) },
-              { label: 'Cao (70–90%)',    value: stats.high_count,    color: 'bg-amber-500', bar: 'bg-amber-100', pct: Math.round(stats.high_count / stats.total_incidents * 100) },
-              { label: 'Thấp (<70%)',     value: stats.low_count,     color: 'bg-emerald-500', bar: 'bg-emerald-100', pct: Math.round(stats.low_count / stats.total_incidents * 100) },
+              { label: t('analytics.extremeLabel'), value: stats.extreme_count, color: 'bg-red-500',   bar: 'bg-red-100', pct: Math.round(stats.extreme_count / stats.total_incidents * 100) },
+              { label: t('analytics.highLabel'),    value: stats.high_count,    color: 'bg-amber-500', bar: 'bg-amber-100', pct: Math.round(stats.high_count / stats.total_incidents * 100) },
+              { label: t('analytics.lowLabel'),     value: stats.low_count,     color: 'bg-emerald-500', bar: 'bg-emerald-100', pct: Math.round(stats.low_count / stats.total_incidents * 100) },
             ].map(({ label, value, color, bar, pct }) => (
               <div key={label} className={`${bar} rounded-xl p-4`}>
                 <p className="text-xs text-[#64748b] mb-2">{label}</p>
@@ -288,7 +291,7 @@ export default function Analytics() {
                 <div className="w-full h-1.5 bg-white/60 rounded-full overflow-hidden">
                   <div className={`h-full ${color} rounded-full`} style={{ width: `${pct}%` }} />
                 </div>
-                <p className="text-[10px] text-[#64748b] mt-1">{pct}% tổng điểm cháy</p>
+                <p className="text-[10px] text-[#64748b] mt-1">{pct}% {t('analytics.pctOfTotal').replace('% ', '')}</p>
               </div>
             ))}
           </div>

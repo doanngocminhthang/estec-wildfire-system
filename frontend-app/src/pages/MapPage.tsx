@@ -2,6 +2,9 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import * as turf from '@turf/turf'
+import { kml as kmlToGeoJSON } from '@tmcw/togeojson'
+// @ts-ignore — shpjs có types nhưng không khai báo default export
+import shp from 'shpjs'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Bookmark { id: string; name: string; center: [number, number]; zoom: number }
@@ -13,6 +16,13 @@ interface DrawnFeature {
   mode: 'point' | 'line' | 'polygon'
   coords: [number, number][]
   label: string
+}
+
+interface ImportedLayer {
+  id: string
+  name: string
+  color: string
+  featureCount: number
 }
 
 // ── Basemaps ──────────────────────────────────────────────────────────────────
@@ -34,11 +44,57 @@ const LAYER_DEFS = [
 
 type LayerId = typeof LAYER_DEFS[number]['id']
 type Visibility = Record<LayerId, boolean>
-type ActiveTool = 'goto' | 'measure' | 'bookmark' | 'heatmap' | 'draw' | null
+type ActiveTool = 'goto' | 'measure' | 'bookmark' | 'heatmap' | 'draw' | 'import' | null
 
 const DEFAULT_VIS: Visibility = {
   'province-fill': true, 'province-line': true, 'districts-line': true,
   'hotspots-heat': true, 'hotspots-points': true, 'incidents': true,
+}
+
+const IMPORT_COLORS = ['#7c3aed', '#0284c7', '#059669', '#dc2626', '#d97706', '#db2777', '#0891b2', '#65a30d']
+
+// ── GIS layer helpers (module 8) ──────────────────────────────────────────────
+function addGISLayerToMap(map: maplibregl.Map, layer: ImportedLayer, geojson: GeoJSON.FeatureCollection) {
+  const src = `import-${layer.id}`
+  if (map.getSource(src)) return
+  map.addSource(src, { type: 'geojson', data: geojson })
+  map.addLayer({ id: `${src}-fill`, type: 'fill', source: src,
+    filter: ['==', ['geometry-type'], 'Polygon'],
+    paint: { 'fill-color': layer.color, 'fill-opacity': 0.18 } })
+  map.addLayer({ id: `${src}-line`, type: 'line', source: src,
+    paint: { 'line-color': layer.color, 'line-width': 2 } })
+  map.addLayer({ id: `${src}-point`, type: 'circle', source: src,
+    filter: ['==', ['geometry-type'], 'Point'],
+    paint: { 'circle-radius': 6, 'circle-color': layer.color,
+      'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } })
+}
+
+function removeGISLayerFromMap(map: maplibregl.Map, layerId: string) {
+  const src = `import-${layerId}`
+  ;[`${src}-fill`, `${src}-line`, `${src}-point`].forEach(id => {
+    if (map.getLayer(id)) map.removeLayer(id)
+  })
+  if (map.getSource(src)) map.removeSource(src)
+}
+
+async function parseGISFile(file: File): Promise<GeoJSON.FeatureCollection> {
+  const ext = file.name.split('.').pop()?.toLowerCase()
+  if (ext === 'geojson' || ext === 'json') {
+    const text = await file.text()
+    return JSON.parse(text) as GeoJSON.FeatureCollection
+  }
+  if (ext === 'kml') {
+    const text = await file.text()
+    const dom = new DOMParser().parseFromString(text, 'text/xml')
+    return kmlToGeoJSON(dom) as GeoJSON.FeatureCollection
+  }
+  if (ext === 'zip') {
+    const buf = await file.arrayBuffer()
+    const result = await shp(buf)
+    if (Array.isArray(result)) return result[0] as GeoJSON.FeatureCollection
+    return result as GeoJSON.FeatureCollection
+  }
+  throw new Error(`Định dạng không hỗ trợ: .${ext ?? '?'}`)
 }
 
 // ── Geodesic distance (haversine) ─────────────────────────────────────────────
@@ -74,27 +130,43 @@ function fmtArea(sqm: number) {
 }
 
 // ── Popup helpers ─────────────────────────────────────────────────────────────
-function hotspotHtml(p: Record<string, unknown>) {
+function hotspotHtml(p: Record<string, unknown>, lngLat: [number, number]) {
   const c = Number(p['confidence_score'])
   const color = c > 90 ? '#ef4444' : c > 70 ? '#fbbf24' : '#34d399'
+  const badge = c > 90 ? 'Cực cao' : c > 70 ? 'Cao' : c > 50 ? 'Trung bình' : 'Thấp'
+  const detectedAt = p['detected_at'] ? new Date(String(p['detected_at'])).toLocaleString('vi-VN') : '—'
   return `<div class="wf-popup">
     <div class="wf-title" style="color:#fbbf24">🔥 Điểm cháy #${p['id']}</div>
-    <div class="wf-row"><span>Thiết bị</span><b>${p['device_id']}</b></div>
-    <div class="wf-row"><span>Độ tin cậy</span><b style="color:${color}">${c}%</b></div>
-    <div class="wf-row"><span>Phát hiện</span><b>${new Date(String(p['detected_at'])).toLocaleString('vi-VN')}</b></div>
+    <div class="wf-row"><span>Thiết bị</span><b>${p['device_id'] ?? '—'}</b></div>
+    <div class="wf-row"><span>Độ tin cậy</span><b style="color:${color}">${c}% <span style="font-size:10px;opacity:0.8">(${badge})</span></b></div>
+    <div class="wf-row"><span>Phát hiện lúc</span><b>${detectedAt}</b></div>
+    <div class="wf-row"><span>Tọa độ</span><b style="font-size:10px;font-family:monospace">${lngLat[1].toFixed(5)}, ${lngLat[0].toFixed(5)}</b></div>
+    <hr class="wf-divider"/>
+    <a class="wf-link" href="/hotspots">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      Xem danh sách điểm cháy
+    </a>
   </div>`
 }
 
 function incidentHtml(p: Record<string, unknown>) {
   const SL: Record<string, string> = { uncontrolled: 'Chưa kiểm soát', containing: 'Đang kiểm soát', controlled: 'Đã kiểm soát' }
   const SC: Record<string, string> = { uncontrolled: '#ef4444', containing: '#fbbf24', controlled: '#34d399' }
+  const PL: Record<string, string> = { high: 'Cao', medium: 'Trung bình', low: 'Thấp', critical: 'Khẩn cấp' }
   const s = String(p['status'])
+  const pri = String(p['priority'])
   return `<div class="wf-popup">
-    <div class="wf-title" style="color:#60a5fa">${p['incident_code']}</div>
-    <div class="wf-sub">${p['title']}</div>
+    <div class="wf-title" style="color:#60a5fa">${p['incident_code'] ?? '—'}</div>
+    <div class="wf-sub">${p['title'] ?? ''}</div>
     <div class="wf-row"><span>Trạng thái</span><b style="color:${SC[s] ?? '#64748b'}">${SL[s] ?? s}</b></div>
-    <div class="wf-row"><span>Diện tích</span><b>${p['burn_area_acres']} ha</b></div>
-    <div class="wf-row"><span>Mức độ</span><b style="text-transform:uppercase">${p['priority']}</b></div>
+    <div class="wf-row"><span>Diện tích cháy</span><b>${p['burn_area_acres'] ?? 0} ha</b></div>
+    <div class="wf-row"><span>Mức độ ưu tiên</span><b>${PL[pri] ?? pri}</b></div>
+    ${p['assigned_to'] ? `<div class="wf-row"><span>Phụ trách</span><b>${p['assigned_to']}</b></div>` : ''}
+    <hr class="wf-divider"/>
+    <a class="wf-link" href="/incidents">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      Xem danh sách sự cố
+    </a>
   </div>`
 }
 
@@ -139,10 +211,21 @@ export default function MapPage() {
   const [activeDrawCoords,  setActiveDrawCoords]  = useState<[number, number][]>([])
   const [drawnFeatures,     setDrawnFeatures]     = useState<DrawnFeature[]>([])
 
+  // Import GIS layers (module 8)
+  const importedGeojsonRef = useRef<Map<string, GeoJSON.FeatureCollection>>(new Map())
+  const [importedLayers,   setImportedLayers]   = useState<ImportedLayer[]>([])
+  const [importError,      setImportError]      = useState<string | null>(null)
+  const [importing,        setImporting]        = useState(false)
+
+  // Clustering (module 24)
+  const [clusterEnabled, setClusterEnabled] = useState(true)
+  const clusterEnabledRef = useRef(true)
+
   // Sync refs to current state
   useEffect(() => { visRef.current = visible }, [visible])
   useEffect(() => { activeToolRef.current = activeTool }, [activeTool])
   useEffect(() => { drawModeRef.current = drawMode }, [drawMode])
+  useEffect(() => { clusterEnabledRef.current = clusterEnabled }, [clusterEnabled])
 
   // Load bookmarks from localStorage
   useEffect(() => {
@@ -334,6 +417,41 @@ export default function MapPage() {
     updateDrawSources()
   }, [clearActivePreview, updateDrawSources])
 
+  // Re-add all imported GIS layers (called after basemap switch)
+  const reAddImportedLayers = useCallback((map: maplibregl.Map) => {
+    importedGeojsonRef.current.forEach((geojson, id) => {
+      const layer = importedLayers.find(l => l.id === id)
+      if (layer) addGISLayerToMap(map, layer, geojson)
+    })
+  }, [importedLayers])
+
+  const handleFileImport = useCallback(async (file: File) => {
+    if (file.size > 20 * 1024 * 1024) { setImportError('File quá lớn (tối đa 20 MB)'); return }
+    setImporting(true); setImportError(null)
+    try {
+      const geojson = await parseGISFile(file)
+      if (!geojson?.features) throw new Error('File không chứa dữ liệu GeoJSON hợp lệ')
+      const id = Date.now().toString()
+      const color = IMPORT_COLORS[(importedLayers.length) % IMPORT_COLORS.length]
+      const layer: ImportedLayer = { id, name: file.name, color, featureCount: geojson.features.length }
+      importedGeojsonRef.current.set(id, geojson)
+      const map = mapRef.current
+      if (map) addGISLayerToMap(map, layer, geojson)
+      setImportedLayers(prev => [...prev, layer])
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : 'Không thể đọc file')
+    } finally {
+      setImporting(false)
+    }
+  }, [importedLayers])
+
+  const deleteImportedLayer = useCallback((id: string) => {
+    const map = mapRef.current
+    if (map) removeGISLayerFromMap(map, id)
+    importedGeojsonRef.current.delete(id)
+    setImportedLayers(prev => prev.filter(l => l.id !== id))
+  }, [])
+
   const exportGeoJSON = useCallback(() => {
     const fc: GeoJSON.FeatureCollection = {
       type: 'FeatureCollection',
@@ -382,6 +500,17 @@ export default function MapPage() {
 
     if (!map.getSource('hotspots'))
       map.addSource('hotspots', { type: 'geojson', data: HOTSPOTS_URL })
+
+    // Cluster source (module 24)
+    if (!map.getSource('hotspots-cluster'))
+      map.addSource('hotspots-cluster', {
+        type: 'geojson',
+        data: HOTSPOTS_URL,
+        cluster: true,
+        clusterMaxZoom: 13,
+        clusterRadius: 50,
+        clusterProperties: { maxConf: ['max', ['get', 'confidence_score']] },
+      })
     if (!map.getLayer('hotspots-heat')) map.addLayer({ id: 'hotspots-heat', type: 'heatmap', source: 'hotspots',
       layout: { visibility: vis['hotspots-heat'] ? 'visible' : 'none' },
       paint: {
@@ -409,12 +538,49 @@ export default function MapPage() {
     })
     if (!map.getLayer('hotspots-points')) map.addLayer({ id: 'hotspots-points', type: 'circle', source: 'hotspots',
       minzoom: 11,
-      layout: { visibility: vis['hotspots-points'] ? 'visible' : 'none' },
+      layout: { visibility: vis['hotspots-points'] && !clusterEnabledRef.current ? 'visible' : 'none' },
       paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 5, 16, 9],
         'circle-color': '#fbbf24', 'circle-stroke-width': 1.5, 'circle-stroke-color': '#ffffff', 'circle-opacity': 0.9,
       },
     })
+
+    // Cluster layers (module 24)
+    const clVis: 'visible' | 'none' = vis['hotspots-points'] && clusterEnabledRef.current ? 'visible' : 'none'
+    if (!map.getLayer('clusters'))
+      map.addLayer({
+        id: 'clusters', type: 'circle', source: 'hotspots-cluster',
+        filter: ['has', 'point_count'],
+        layout: { visibility: clVis },
+        paint: {
+          'circle-color': ['step', ['get', 'maxConf'], '#34d399', 50, '#fbbf24', 70, '#f97316', 90, '#ef4444'],
+          'circle-radius': ['step', ['get', 'point_count'], 20, 5, 28, 20, 36],
+          'circle-stroke-width': 2.5, 'circle-stroke-color': '#ffffff', 'circle-opacity': 0.88,
+        },
+      })
+    if (!map.getLayer('cluster-count'))
+      map.addLayer({
+        id: 'cluster-count', type: 'symbol', source: 'hotspots-cluster',
+        filter: ['has', 'point_count'],
+        layout: {
+          visibility: clVis,
+          'text-field': '{point_count_abbreviated}',
+          'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+          'text-size': 13,
+        },
+        paint: { 'text-color': '#ffffff' },
+      })
+    if (!map.getLayer('unclustered-point'))
+      map.addLayer({
+        id: 'unclustered-point', type: 'circle', source: 'hotspots-cluster',
+        filter: ['!', ['has', 'point_count']],
+        layout: { visibility: clVis },
+        paint: {
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 5, 14, 9],
+          'circle-color': ['step', ['get', 'confidence_score'], '#34d399', 50, '#fbbf24', 70, '#f97316', 90, '#ef4444'],
+          'circle-stroke-width': 1.5, 'circle-stroke-color': '#ffffff', 'circle-opacity': 0.9,
+        },
+      })
 
     if (!map.getSource('incidents-src'))
       map.addSource('incidents-src', { type: 'geojson', data: INCIDENTS_URL })
@@ -431,8 +597,9 @@ export default function MapPage() {
 
     addMeasureLayers(map)
     addDrawLayers(map)
+    reAddImportedLayers(map)
     setMapReady(true)
-  }, [addMeasureLayers, addDrawLayers])
+  }, [addMeasureLayers, addDrawLayers, reAddImportedLayers])
 
   // ── Mount map ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -455,7 +622,8 @@ export default function MapPage() {
     map.on('click', 'hotspots-points', (e) => {
       if (activeToolRef.current) return
       if (!e.features?.[0]) return
-      popupRef.current!.setLngLat(e.lngLat).setHTML(hotspotHtml(e.features[0].properties as Record<string, unknown>)).addTo(map)
+      const lngLat: [number, number] = [e.lngLat.lng, e.lngLat.lat]
+      popupRef.current!.setLngLat(e.lngLat).setHTML(hotspotHtml(e.features[0].properties as Record<string, unknown>, lngLat)).addTo(map)
     })
     map.on('click', 'incidents', (e) => {
       if (activeToolRef.current) return
@@ -528,10 +696,37 @@ export default function MapPage() {
       mMarkersRef.current.push(marker)
     })
 
-    map.on('mouseenter', 'hotspots-points', () => { if (!activeToolRef.current) map.getCanvas().style.cursor = 'pointer' })
-    map.on('mouseleave', 'hotspots-points', () => { if (!activeToolRef.current) map.getCanvas().style.cursor = '' })
-    map.on('mouseenter', 'incidents',       () => { if (!activeToolRef.current) map.getCanvas().style.cursor = 'pointer' })
-    map.on('mouseleave', 'incidents',       () => { if (!activeToolRef.current) map.getCanvas().style.cursor = '' })
+    map.on('mouseenter', 'hotspots-points',   () => { if (!activeToolRef.current) map.getCanvas().style.cursor = 'pointer' })
+    map.on('mouseleave', 'hotspots-points',   () => { if (!activeToolRef.current) map.getCanvas().style.cursor = '' })
+    map.on('mouseenter', 'incidents',         () => { if (!activeToolRef.current) map.getCanvas().style.cursor = 'pointer' })
+    map.on('mouseleave', 'incidents',         () => { if (!activeToolRef.current) map.getCanvas().style.cursor = '' })
+    map.on('mouseenter', 'clusters',          () => { if (!activeToolRef.current) map.getCanvas().style.cursor = 'pointer' })
+    map.on('mouseleave', 'clusters',          () => { if (!activeToolRef.current) map.getCanvas().style.cursor = '' })
+    map.on('mouseenter', 'unclustered-point', () => { if (!activeToolRef.current) map.getCanvas().style.cursor = 'pointer' })
+    map.on('mouseleave', 'unclustered-point', () => { if (!activeToolRef.current) map.getCanvas().style.cursor = '' })
+
+    // Cluster click — zoom in to expand (module 24)
+    map.on('click', 'clusters', (e) => {
+      if (activeToolRef.current) return
+      const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] })
+      if (!features.length) return
+      const clusterId = features[0].properties?.cluster_id as number
+      const src = map.getSource('hotspots-cluster') as maplibregl.GeoJSONSource
+      src.getClusterExpansionZoom(clusterId)
+        .then((zoom) => {
+          const coords = (features[0].geometry as GeoJSON.Point).coordinates as [number, number]
+          map.easeTo({ center: coords, zoom, duration: 500 })
+        })
+        .catch(() => {})
+    })
+
+    // Unclustered point click — show popup (module 24)
+    map.on('click', 'unclustered-point', (e) => {
+      if (activeToolRef.current) return
+      if (!e.features?.[0]) return
+      const lngLat: [number, number] = [e.lngLat.lng, e.lngLat.lat]
+      popupRef.current!.setLngLat(e.lngLat).setHTML(hotspotHtml(e.features[0].properties as Record<string, unknown>, lngLat)).addTo(map)
+    })
 
     map.on('load', () => loadDataLayers(map))
     mapRef.current = map
@@ -543,11 +738,28 @@ export default function MapPage() {
     const map = mapRef.current
     if (!map || !mapReady) return
     LAYER_DEFS.forEach(({ id }) => {
-      if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', visible[id] ? 'visible' : 'none')
+      if (!map.getLayer(id)) return
+      // hotspots-points visibility is managed by cluster effect when clustering is on
+      if (id === 'hotspots-points' && clusterEnabledRef.current) return
+      map.setLayoutProperty(id, 'visibility', visible[id] ? 'visible' : 'none')
     })
     if (map.getLayer('districts-label'))
       map.setLayoutProperty('districts-label', 'visibility', visible['districts-line'] ? 'visible' : 'none')
   }, [visible, mapReady])
+
+  // Sync cluster layers when clusterEnabled or hotspots visibility changes (module 24)
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return
+    const pointsOn = visible['hotspots-points']
+    const clVis: 'visible' | 'none' = pointsOn && clusterEnabled ? 'visible' : 'none'
+    ;['clusters', 'cluster-count', 'unclustered-point'].forEach(id => {
+      if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', clVis)
+    })
+    if (map.getLayer('hotspots-points'))
+      map.setLayoutProperty('hotspots-points', 'visibility',
+        pointsOn && !clusterEnabled ? 'visible' : 'none')
+  }, [clusterEnabled, visible, mapReady])
 
   // ── Basemap switch ───────────────────────────────────────────────────────────
   function switchBasemap(bmId: string) {
@@ -634,20 +846,35 @@ export default function MapPage() {
               {LAYER_DEFS.map(({ id, label, color, icon }) => {
                 const on = visible[id]
                 return (
-                  <button key={id} onClick={() => toggleLayer(id)}
-                    className="w-full flex items-center gap-2.5 px-1.5 py-2 rounded-lg hover:bg-[#f1f5f9] transition-colors"
-                  >
-                    <div className="w-4 h-4 rounded-sm border-2 flex items-center justify-center flex-shrink-0 transition-all"
-                      style={{ backgroundColor: on ? color : 'transparent', borderColor: on ? color : '#cbd5e1' }}>
-                      {on && (
-                        <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
-                          <path d="M1.5 5 L4 7.5 L8.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      )}
-                    </div>
-                    <span className="material-symbols-outlined text-sm flex-shrink-0" style={{ color: on ? color : '#cbd5e1' }}>{icon}</span>
-                    <span className={`text-xs flex-1 text-left leading-tight ${on ? 'text-[#1e293b]' : 'text-[#94a3b8]'}`}>{label}</span>
-                  </button>
+                  <div key={id}>
+                    <button onClick={() => toggleLayer(id)}
+                      className="w-full flex items-center gap-2.5 px-1.5 py-2 rounded-lg hover:bg-[#f1f5f9] transition-colors"
+                    >
+                      <div className="w-4 h-4 rounded-sm border-2 flex items-center justify-center flex-shrink-0 transition-all"
+                        style={{ backgroundColor: on ? color : 'transparent', borderColor: on ? color : '#cbd5e1' }}>
+                        {on && (
+                          <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
+                            <path d="M1.5 5 L4 7.5 L8.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className="material-symbols-outlined text-sm flex-shrink-0" style={{ color: on ? color : '#cbd5e1' }}>{icon}</span>
+                      <span className={`text-xs flex-1 text-left leading-tight ${on ? 'text-[#1e293b]' : 'text-[#94a3b8]'}`}>{label}</span>
+                    </button>
+                    {id === 'hotspots-points' && on && (
+                      <button
+                        onClick={() => setClusterEnabled(p => !p)}
+                        className={`ml-7 mb-1 flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] border transition-all ${
+                          clusterEnabled
+                            ? 'bg-amber-50 border-amber-200 text-amber-700'
+                            : 'border-[#e2e8f0] text-[#94a3b8] hover:border-amber-300 hover:text-amber-600'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-xs">hub</span>
+                        {clusterEnabled ? 'Đang gom cụm' : 'Gom cụm điểm cháy'}
+                      </button>
+                    )}
+                  </div>
                 )
               })}
             </div>
@@ -669,6 +896,7 @@ export default function MapPage() {
           { id: 'draw',     icon: 'draw',         label: 'Vẽ & đo đạc' },
           { id: 'heatmap',  icon: 'local_fire_department', label: 'Nguy cơ cháy' },
           { id: 'bookmark', icon: 'bookmark',     label: 'Địa điểm đã lưu' },
+          { id: 'import',   icon: 'upload_file',  label: 'Nhập GIS' },
         ] as const).map(({ id, icon, label }) => (
           <button
             key={id}
@@ -690,6 +918,11 @@ export default function MapPage() {
             {id === 'draw' && drawnFeatures.length > 0 && (
               <span className={`text-[10px] px-1 py-0.5 rounded-full leading-none ${activeTool === id ? 'bg-white/20 text-white' : 'bg-[#1565c0] text-white'}`}>
                 {drawnFeatures.length}
+              </span>
+            )}
+            {id === 'import' && importedLayers.length > 0 && (
+              <span className={`text-[10px] px-1 py-0.5 rounded-full leading-none ${activeTool === id ? 'bg-white/20 text-white' : 'bg-[#7c3aed] text-white'}`}>
+                {importedLayers.length}
               </span>
             )}
           </button>
@@ -1010,6 +1243,85 @@ export default function MapPage() {
         </div>
       )}
 
+      {/* ── Import GIS panel ─────────────────────────────────────────────── */}
+      {activeTool === 'import' && (
+        <div className="absolute top-14 right-3 z-10 w-72 bg-white/95 border border-[#e2e8f0] rounded-xl shadow-lg backdrop-blur-sm overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
+            <span className="material-symbols-outlined text-[#7c3aed] text-base">upload_file</span>
+            <span className="text-xs font-semibold text-[#1e293b]">Nhập dữ liệu GIS</span>
+          </div>
+          <div className="p-3 space-y-3">
+            {/* Drop zone */}
+            <label
+              className="flex flex-col items-center justify-center gap-2 w-full h-28 border-2 border-dashed border-[#c4b5fd] rounded-xl bg-[#faf5ff] hover:bg-[#f3e8ff] transition-colors cursor-pointer"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault()
+                const file = e.dataTransfer.files[0]
+                if (file) handleFileImport(file)
+              }}
+            >
+              <input type="file" className="hidden" accept=".geojson,.json,.kml,.zip"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileImport(f); e.target.value = '' }} />
+              {importing ? (
+                <div className="w-5 h-5 border-2 border-[#7c3aed] border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-2xl text-[#7c3aed]">cloud_upload</span>
+                  <p className="text-xs text-[#7c3aed] font-medium text-center leading-snug">
+                    Kéo thả hoặc click để chọn file
+                  </p>
+                </>
+              )}
+            </label>
+
+            <p className="text-[10px] text-[#94a3b8] text-center">
+              Hỗ trợ: GeoJSON · KML · ZIP (Shapefile) · tối đa 20 MB
+            </p>
+
+            {/* Error */}
+            {importError && (
+              <div className="flex items-start gap-2 p-2.5 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600">
+                <span className="material-symbols-outlined text-sm mt-0.5 flex-shrink-0">error</span>
+                <span>{importError}</span>
+              </div>
+            )}
+
+            {/* Imported layers list */}
+            {importedLayers.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className="text-[10px] uppercase tracking-widest text-[#94a3b8]">Layer đã nhập ({importedLayers.length})</p>
+                  <button onClick={() => { importedLayers.forEach(l => deleteImportedLayer(l.id)) }}
+                    className="text-[10px] text-red-500 hover:underline flex items-center gap-0.5">
+                    <span className="material-symbols-outlined text-xs">delete_sweep</span>Xóa tất cả
+                  </button>
+                </div>
+                <div className="space-y-1 max-h-44 overflow-y-auto">
+                  {importedLayers.map((layer) => (
+                    <div key={layer.id} className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-[#f8fafc] group">
+                      <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: layer.color }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-[#1e293b] truncate">{layer.name}</p>
+                        <p className="text-[10px] text-[#94a3b8]">{layer.featureCount} đối tượng</p>
+                      </div>
+                      <button onClick={() => deleteImportedLayer(layer.id)}
+                        className="opacity-0 group-hover:opacity-100 text-[#94a3b8] hover:text-red-500 transition-all flex-shrink-0">
+                        <span className="material-symbols-outlined text-sm">close</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {importedLayers.length === 0 && !importing && !importError && (
+              <p className="text-center text-[11px] text-[#94a3b8]">Chưa có layer nào được nhập</p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Legend ───────────────────────────────────────────────────────────── */}
       <div className="absolute bottom-8 left-3 z-10 bg-white/95 border border-[#e2e8f0] rounded-xl p-3 shadow-lg backdrop-blur-sm">
         <p className="text-[10px] uppercase tracking-widest text-[#94a3b8] mb-2.5">Chú giải</p>
@@ -1029,10 +1341,27 @@ export default function MapPage() {
               <span>Thấp</span><span>Trung bình</span><span>Cao</span><span>Cực cao</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full border border-gray-300 flex-shrink-0 bg-[#fbbf24]" />
-            <span className="text-[10px] text-[#64748b]">Điểm cháy (zoom &gt;11)</span>
-          </div>
+          {clusterEnabled ? (
+            <div className="space-y-1">
+              <p className="text-[9px] uppercase tracking-widest text-[#94a3b8]">Cụm điểm cháy</p>
+              {[
+                { color: '#ef4444', label: 'Cực cao ≥90%' },
+                { color: '#f97316', label: 'Cao 70–90%' },
+                { color: '#fbbf24', label: 'Trung bình 50–70%' },
+                { color: '#34d399', label: 'Thấp <50%' },
+              ].map(({ color, label }) => (
+                <div key={label} className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full border border-gray-300 flex-shrink-0" style={{ backgroundColor: color }} />
+                  <span className="text-[10px] text-[#64748b]">{label}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full border border-gray-300 flex-shrink-0 bg-[#fbbf24]" />
+              <span className="text-[10px] text-[#64748b]">Điểm cháy</span>
+            </div>
+          )}
           {[
             { color: '#ef4444', label: 'Chưa kiểm soát' },
             { color: '#fbbf24', label: 'Đang kiểm soát' },

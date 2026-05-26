@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException, status
 
 from app.core.security import create_access_token, verify_password
@@ -9,6 +9,7 @@ from app.schemas.token_schema import LoginResponse
 def login(db: Session, username: str, password: str, ip_address: str | None = None) -> LoginResponse:
     user = (
         db.query(User)
+        .options(joinedload(User.roles))
         .filter(
             (User.username == username) | (User.email == username),
             User.is_active.is_(True),

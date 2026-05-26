@@ -1,24 +1,32 @@
 import { NavLink, Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../store/authStore'
-
-const links = [
-  { to: '/dashboard', icon: 'dashboard',             label: 'Tổng quan' },
-  { to: '/map',       icon: 'map',                   label: 'Bản đồ' },
-  { to: '/incidents', icon: 'local_fire_department', label: 'Sự cố' },
-  { to: '/hotspots',  icon: 'crisis_alert',          label: 'Điểm cháy' },
-  { to: '/analytics', icon: 'bar_chart',             label: 'Thống kê' },
-  { to: '/bulletins', icon: 'campaign',              label: 'Bảng tin' },
-  { to: '/search',    icon: 'manage_search',         label: 'Tìm kiếm' },
-]
-
-const adminLinks = [
-  { to: '/users',     icon: 'group',    label: 'Người dùng' },
-  { to: '/audit-log', icon: 'history',  label: 'Nhật ký' },
-]
 
 export default function Sidebar() {
   const { user, logout, hasRole } = useAuthStore()
   const navigate = useNavigate()
+  const { t } = useTranslation()
+
+  const links = [
+    { to: '/dashboard', icon: 'dashboard',             label: t('nav.dashboard') },
+    { to: '/map',       icon: 'map',                   label: t('nav.map') },
+    { to: '/incidents', icon: 'local_fire_department', label: t('nav.incidents') },
+    { to: '/hotspots',  icon: 'crisis_alert',          label: t('nav.hotspots') },
+    { to: '/analytics', icon: 'bar_chart',             label: t('nav.analytics') },
+    { to: '/bulletins', icon: 'campaign',              label: t('nav.bulletins') },
+    { to: '/search',      icon: 'manage_search', label: t('nav.search') },
+    { to: '/performance', icon: 'leaderboard',   label: t('nav.performance') },
+    { to: '/timelapse',   icon: 'satellite_alt', label: t('nav.timelapse') },
+    { to: '/faq',         icon: 'help_center',   label: t('nav.faq') },
+  ]
+
+  const adminLinks = [
+    { to: '/users',        icon: 'group',                   label: t('nav.users') },
+    { to: '/aor',          icon: 'edit_location',           label: t('nav.aor') },
+    { to: '/audit-log',    icon: 'history',                 label: t('nav.auditLog') },
+    { to: '/integrations', icon: 'hub',                     label: t('nav.integrations') },
+    { to: '/cameras',     icon: 'videocam',                label: t('nav.cameras') },
+  ]
 
   function handleLogout() {
     logout()
@@ -61,7 +69,7 @@ export default function Sidebar() {
           <>
             <div className="my-2 border-t border-white/10" />
             <p className="hidden lg:block px-2.5 pb-1 text-[10px] uppercase tracking-wider text-white/30">
-              Quản trị
+              {t('nav.admin')}
             </p>
             {adminLinks.map(({ to, icon, label }) => (
               <NavLink
@@ -89,11 +97,11 @@ export default function Sidebar() {
           <span className="material-symbols-outlined text-white/40 text-xl flex-shrink-0 group-hover:text-white/70">account_circle</span>
           <div className="hidden lg:block min-w-0 flex-1">
             <p className="text-xs text-white/60 truncate group-hover:text-white/80">{user?.username}</p>
-            <p className="text-[10px] text-white/30">Hồ sơ cá nhân</p>
+            <p className="text-[10px] text-white/30">{t('nav.profile')}</p>
           </div>
           <button
             onClick={(e) => { e.preventDefault(); handleLogout() }}
-            title="Đăng xuất"
+            title={t('nav.logout')}
             className="hidden lg:flex items-center justify-center w-7 h-7 rounded hover:bg-white/20 text-white/40 hover:text-white transition-colors flex-shrink-0"
           >
             <span className="material-symbols-outlined text-lg">logout</span>
